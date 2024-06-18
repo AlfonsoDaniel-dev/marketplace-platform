@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"shopperia/src/common/models"
 	"shopperia/src/core/helpers"
 )
 
@@ -59,4 +60,8 @@ func (u *UserDomain) CheckLogin(email, password string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (u *UserDomain) TwoStepVerificationSendEmail(emailContent models.SendEmailForm) error {
+
 }

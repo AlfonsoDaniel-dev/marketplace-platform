@@ -57,15 +57,15 @@ func (p *psqlUser) PsqlGetUserIdByEmail(email string) (uuid.UUID, error) {
 	return id, nil
 }
 
-func (p *psqlUser) PsqlInsertAddressData(userId uuid.UUID, address user_model.Address) error {
-	stmt, err := p.DB.Prepare(sqlInsertAddressOnAddressTable)
+func (p *psqlUser) PsqlInsertAddressData(address user_model.Address) error {
+	stmt, err := p.DB.Prepare(sqlInsertUserAddress)
 	if err != nil {
 		return err
 	}
 
 	defer stmt.Close()
 
-	_, err = stmt.Exec(address.ID, userId, address.Street, address.City, address.State, address.PostalCode, address.Country, address.CreatedAt)
+	_, err = stmt.Exec(address.ID, address.UserId, address.Street, address.City, address.State, address.PostalCode, address.Country, address.CreatedAt)
 	if err != nil {
 		return err
 	}

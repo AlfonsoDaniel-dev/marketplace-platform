@@ -9,7 +9,7 @@ type OutputInterface interface {
 	PsqlCreateUserWithOutAddress(user models.User) error
 	PsqlGetUserIdByEmail(email string) (uuid.UUID, error)
 	PsqlGetUserNameByEmail(email string) (string, error)
-	PsqlInsertAddressData(userId uuid.UUID, address models.Address) error
+	PsqlInsertAddressData(address models.Address) error
 
 	// login methods
 	PsqlGetHashPassword(email string) ([]byte, error)
@@ -18,4 +18,5 @@ type OutputInterface interface {
 
 type EmailInterface interface {
 	SendWelcomeEmail(emailContent models.WelcomeEmail, email models.EmailDto) error
+	SendLoginConfirmationEmail(email models.EmailDto) error
 }

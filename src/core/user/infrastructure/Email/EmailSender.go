@@ -41,3 +41,21 @@ func (e *emailSender) SendWelcomeEmail(emailContent models.WelcomeEmail, email m
 
 	return nil
 }
+
+func (e *emailSender) SendLoginConfirmationEmail(emailContent models.EmailDto) error {
+	templatePath := prefix + "/LoginConfirm.html"
+
+	form := models.SendEmailForm{
+		Subject:          "Confirm login on your device",
+		DestinationEmail: emailContent.DestinationEmail,
+		DestinationName:  emailContent.DestinationName,
+		TemplatePath:     templatePath,
+		TemplateData:     emailContent,
+	}
+
+	if err := e.Email.SendEmail(form); err != nil {
+		return err
+	}
+
+	return nil
+}

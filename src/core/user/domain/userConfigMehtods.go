@@ -45,5 +45,7 @@ func (u *UserDomain) UploadAddressData(email string, address models.Address) err
 
 	address.UserId = userID
 
+	err = u.PsqlInsertAddressData(address)
+
 	return nil
 }
