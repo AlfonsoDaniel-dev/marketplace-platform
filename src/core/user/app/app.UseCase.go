@@ -17,6 +17,8 @@ type UseCase interface {
 
 	GetUserIdByEmail(email string) (uuid.UUID, error)
 	CheckLogin(email, password string) (bool, error)
+	CheckTwoStepsVerification(email string) (bool, error)
+	SendLoginConfirmationEmail(DestEmail string) (string, error)
 
 	WelcomeEmail(firstName, lastName, DestEmail string) error
 }

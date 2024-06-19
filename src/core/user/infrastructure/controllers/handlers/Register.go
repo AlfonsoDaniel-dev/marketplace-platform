@@ -35,7 +35,7 @@ func (H *Handler) Register(c echo.Context) error {
 		Password: RegisterForm.Password,
 	}
 
-	token, err := H.Service.Login(loginModel)
+	token, err := H.Service.LoginUser(loginModel)
 	if err != nil {
 		fmt.Println(err)
 		response := responses.NewResponse("error", "register was success but it was an error while generating Token for auto login", err)

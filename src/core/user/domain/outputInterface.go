@@ -14,9 +14,10 @@ type OutputInterface interface {
 	// login methods
 	PsqlGetHashPassword(email string) ([]byte, error)
 	PsqlVerifyEmailExists(email string) (string, error)
+	PsqlCheckTwoStepsVerificationIsTrue(email string) (bool, error)
 }
 
 type EmailInterface interface {
 	SendWelcomeEmail(emailContent models.WelcomeEmail, email models.EmailDto) error
-	SendLoginConfirmationEmail(email models.EmailDto) error
+	SendLoginConfirmationEmail(email models.SendEmailForm) error
 }

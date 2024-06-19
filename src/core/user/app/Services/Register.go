@@ -14,7 +14,7 @@ func (S *Service) Register(register UserDTO.RegisterDTO) error {
 		return errors.New("please provide valid fields")
 	}
 
-	AccountCreatedAt := time.Now()
+	AccountCreatedAt := time.Now().Unix()
 	UserId := uuid.New()
 
 	user := userModel.User{
@@ -31,7 +31,7 @@ func (S *Service) Register(register UserDTO.RegisterDTO) error {
 		OrderedProducts: nil,
 		Orders:          nil,
 		CreatedAt:       AccountCreatedAt,
-		UpdatedAt:       time.Time{},
+		UpdatedAt:       0,
 	}
 
 	fmt.Println(user.Biography)

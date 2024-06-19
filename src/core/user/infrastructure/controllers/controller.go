@@ -13,6 +13,7 @@ import (
 type Handler interface {
 	HelloWorld(c echo.Context) error
 	Register(c echo.Context) error
+	UserLogin(c echo.Context) error
 }
 
 type UserController struct {
@@ -50,4 +51,5 @@ func (c *UserController) UserPublicRoutes() {
 	public := c.echo.Group("/api/user")
 
 	public.POST("/register", c.Handler.Register)
+	public.POST("/login", c.Handler.UserLogin)
 }

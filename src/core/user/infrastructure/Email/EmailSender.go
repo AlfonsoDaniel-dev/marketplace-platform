@@ -42,7 +42,7 @@ func (e *emailSender) SendWelcomeEmail(emailContent models.WelcomeEmail, email m
 	return nil
 }
 
-func (e *emailSender) SendLoginConfirmationEmail(emailContent models.EmailDto) error {
+func (e *emailSender) SendLoginConfirmationEmail(emailContent models.SendEmailForm) error {
 	templatePath := prefix + "/LoginConfirm.html"
 
 	form := models.SendEmailForm{

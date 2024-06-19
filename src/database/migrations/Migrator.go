@@ -67,7 +67,7 @@ func (m *Migrator) Migrate() error {
 		}
 	}
 
-	tx.Commit()
+	defer tx.Commit()
 
 	log.Println("Migraciones Realizadas")
 

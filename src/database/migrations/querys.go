@@ -14,6 +14,7 @@ const sqlMigrateUserTable = `CREATE TABLE IF NOT EXISTS users(
     age INT NOT NULL,
     email VARCHAR(60) NOT NULL,
     password VARCHAR(350) NOT NULL,
+    two_steps_verification BOOLEAN NOT NULL DEFAULT false,
     address_id uuid,
     
     

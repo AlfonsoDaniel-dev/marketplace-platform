@@ -26,7 +26,7 @@ func (p *psqlUser) PsqlCreateUserWithOutAddress(user user_model.User) error {
 
 	defer stmt.Close()
 
-	nullTime := helpers.TimeToNull(user.UpdatedAt)
+	nullTime := helpers.IntToNull(user.UpdatedAt)
 
 	nullBiography := helpers.StringToNull(user.Biography)
 
@@ -91,4 +91,22 @@ func (p *psqlUser) PsqlGetUserNameByEmail(email string) (string, error) {
 	}
 
 	return email, nil
+}
+
+func (p *psqlUser) PsqlCheckTwoStepsVerificationIsTrue(email string) (bool, error) {
+	stmt, err := p.DB.Prepare(sqlCheckUserTsvIsTrue)
+	if err != nil {
+		return false, err
+	}
+
+	defer stmt.Close()
+
+	row := stmt.QueryRow(email)
+
+	err = row.Scan(&email)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
