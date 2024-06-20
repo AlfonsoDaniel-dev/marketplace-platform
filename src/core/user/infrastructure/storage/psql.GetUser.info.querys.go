@@ -7,3 +7,9 @@ const sqlInsertUserAddress = `INSERT INTO user_addresses(id, user_id, street, ci
 const sqlAddAddressOnUseTable = `INSERT INTO users (address_id) SELECT user_id FROM user_addresses WHERE address_id = $1`
 
 const sqlCheckUserTsvIsTrue = `SELECT two_steps_verification FROM users WHERE email = $1`
+
+const sqlInsertAccesToken = `UPDATE users SET tmpTSVCodeVerification = $1 WHERE email = $2 RETURNING tmpTSVCodeVerification`
+
+const sqlGetAccessToken = `SELECT tmpTSVCodeVerification FROM users WHERE email = $1`
+
+const sqlCleanAccessToken = `UPDATE users SET tmpTSVCodeVerification = '' WHERE email = $1`

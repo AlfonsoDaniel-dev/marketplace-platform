@@ -81,9 +81,39 @@ func (S *Service) SendLoginConfirmation(email string) (string, error) {
 
 	ConfirmationLink, err := S.UseCase.SendLoginConfirmationEmail(email)
 	if err != nil {
+		fmt.Println(err)
 		errStr := fmt.Sprintf("it was an error while sendingConfirmation email: %v", err)
 		return "", errors.New(errStr)
 	}
 
 	return ConfirmationLink, nil
+}
+
+func (S *Service) CheckToken(email, token string) (bool, error) {
+	if email == "" || token == "" {
+		return false, errors.New("email or token cannot be empty")
+	}
+
+	ok, err := S.UseCase.CheckAccessToken(email, token)
+	if err != nil || !ok {
+		errStr := fmt.Sprintf("It was an error verifing token, may be token is bad. ERR: %v", err)
+		return false, errors.New(errStr)
+	}
+
+	return true, nil
+}
+
+func (S *Service) CleanToken(email string) error {
+	if email == "" {
+		return errors.New("no email provide")
+	}
+
+	err := S.UseCase.CleanAccessToken(email)
+	fmt.Println(err)
+	if err != nil {
+		errStr := fmt.Sprintf("Error while cleaning token. ERR: %v", err)
+		return errors.New(errStr)
+	}
+
+	return nil
 }

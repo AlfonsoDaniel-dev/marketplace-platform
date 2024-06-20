@@ -22,6 +22,8 @@ type ServiceInterface interface {
 	LoginUser(form models.Login) (string, error)
 	CheckTwoStepsVerification(email string) (bool, error)
 	SendLoginConfirmation(email string) (string, error)
+	CheckToken(email, token string) (bool, error)
+	CleanToken(email string) error
 	UploadAddress(email string, form UserDTO.UploadAddressForm) error
 }
 

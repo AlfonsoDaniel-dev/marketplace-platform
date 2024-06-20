@@ -1,7 +1,7 @@
 package Userstorage
 
 // sqLCreateUser inserts user data for register
-const sqlCreateUser = `INSERT INTO users (id, first_name, last_name, user_name, biography, age, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+const sqlCreateUser = `INSERT INTO users (id, first_name, last_name, user_name, biography, age, email, password, two_steps_verification, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
 const sqlGetUserIdByEmail = `SELECT id FROM users WHERE email = $1`
 

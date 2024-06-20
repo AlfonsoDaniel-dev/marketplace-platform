@@ -19,6 +19,8 @@ type UseCase interface {
 	CheckLogin(email, password string) (bool, error)
 	CheckTwoStepsVerification(email string) (bool, error)
 	SendLoginConfirmationEmail(DestEmail string) (string, error)
+	CheckAccessToken(email, token string) (bool, error)
+	CleanAccessToken(email string) error
 
 	WelcomeEmail(firstName, lastName, DestEmail string) error
 }

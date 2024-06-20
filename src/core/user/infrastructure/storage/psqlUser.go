@@ -30,7 +30,7 @@ func (p *psqlUser) PsqlCreateUserWithOutAddress(user user_model.User) error {
 
 	nullBiography := helpers.StringToNull(user.Biography)
 
-	_, err = stmt.Exec(user.Id, user.FirstName, user.LastName, user.UserName, nullBiography, user.Age, user.Email, user.Password, user.CreatedAt, nullTime)
+	_, err = stmt.Exec(user.Id, user.FirstName, user.LastName, user.UserName, nullBiography, user.Age, user.Email, user.Password, user.TwoStepsVerfication, user.CreatedAt, nullTime)
 	if err != nil {
 		return err
 	}

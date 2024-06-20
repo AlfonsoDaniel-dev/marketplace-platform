@@ -13,3 +13,10 @@ type Claims struct {
 	IsAdmin  bool   `json:"is_admin"`
 	jwt.StandardClaims
 }
+
+type SendTSVLoginEmail struct {
+	UserName  string
+	Text      string
+	Link      string
+	FinalText string
+}
