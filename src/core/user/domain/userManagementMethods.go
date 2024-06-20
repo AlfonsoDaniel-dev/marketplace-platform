@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"os"
 	"shopperia/src/common/models"
 	"shopperia/src/core/helpers"
 )
@@ -73,7 +74,6 @@ func (u *UserDomain) CheckTwoStepsVerification(email string) (bool, error) {
 	if err != nil || !ok {
 		return false, err
 	}
-
 	return true, nil
 }
 
@@ -112,7 +112,9 @@ func (u *UserDomain) SendLoginConfirmationEmail(DestEmail string) (string, error
 
 	token, err := u.GenerateAccessToken(DestEmail)
 
-	link := fmt.Sprintf("http://localhost:8080/api/user/login/confirm/%v/%v", DestEmail, token)
+	host := os.Getenv("APP_HOST")
+
+	link := fmt.Sprintf("http://%v:8080/api/user/login/confirm/%v/%v", host, DestEmail, token)
 
 	text := "Hello there! Looks like you wanna log-in on your account, we just wanna make sure is You. Click bellow to confirm your trying to log-in."
 	Linktext := "Click here to confirm"

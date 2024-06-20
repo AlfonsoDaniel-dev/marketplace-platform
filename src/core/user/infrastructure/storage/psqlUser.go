@@ -103,8 +103,9 @@ func (p *psqlUser) PsqlCheckTwoStepsVerificationIsTrue(email string) (bool, erro
 
 	row := stmt.QueryRow(email)
 
-	err = row.Scan(&email)
-	if err != nil {
+	var ok bool
+	err = row.Scan(&ok)
+	if err != nil || !ok {
 		return false, err
 	}
 
