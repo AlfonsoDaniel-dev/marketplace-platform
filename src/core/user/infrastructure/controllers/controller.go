@@ -3,6 +3,7 @@ package Usercontroller
 import (
 	"database/sql"
 	"github.com/labstack/echo/v4"
+	commonMiddlewares "shopperia/src/common/middlewares"
 	UserServices "shopperia/src/core/user/app/Services"
 	userDomain "shopperia/src/core/user/domain"
 	User_email "shopperia/src/core/user/infrastructure/Email"
@@ -14,6 +15,7 @@ type Handler interface {
 	HelloWorld(c echo.Context) error
 	Register(c echo.Context) error
 	UserLogin(c echo.Context) error
+	UpdateUserName(c echo.Context) error
 }
 
 type UserController struct {
@@ -36,9 +38,9 @@ func NewController(e *echo.Echo, db *sql.DB, accountEmail, accountName, password
 }
 
 func (c UserController) BuildRoutes() {
-
 	c.testRoutes()
-	c.UserPublicRoutes()
+	c.userPublicRoutes()
+	c.userPrivateRoutes()
 }
 
 func (c *UserController) testRoutes() {
@@ -47,9 +49,18 @@ func (c *UserController) testRoutes() {
 	tester.GET("/helloWorld", c.Handler.HelloWorld)
 }
 
-func (c *UserController) UserPublicRoutes() {
+func (c *UserController) userPublicRoutes() {
 	public := c.echo.Group("/api/user")
 
 	public.POST("/register", c.Handler.Register)
 	public.POST("/login", c.Handler.UserLogin)
+}
+
+func (c *UserController) userPrivateRoutes() {
+	private := c.echo.Group("/api/user")
+	private.Use(commonMiddlewares.ValidateToken)
+
+	// config routes
+	config := private.Group("/config")
+	config.POST("/update/userName", c.Handler.UpdateUserName)
 }

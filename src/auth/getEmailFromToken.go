@@ -32,7 +32,7 @@ func GetEmailFromToken(TokenString string) (string, error) {
 	return email, nil
 }
 
-func GetFromToken(tokenString, whatThing string) (interface{}, error) {
+func GetFromToken(tokenString, whatThing string) (string, error) {
 	parts := strings.Split(tokenString, ":")
 	if len(parts) != 3 {
 		return "", errors.New("invalid token")
@@ -48,7 +48,7 @@ func GetFromToken(tokenString, whatThing string) (interface{}, error) {
 		return "", errors.New("error while unmarshaling token")
 	}
 
-	var value interface{}
+	var value string
 	var ok bool
 
 	switch whatThing {
@@ -58,18 +58,14 @@ func GetFromToken(tokenString, whatThing string) (interface{}, error) {
 			errStr := fmt.Sprintf("no %v field in token", whatThing)
 			return "", errors.New(errStr)
 		}
+		return value, nil
 	case "user_name":
 		value, ok = claims["user_name"].(string)
 		if !ok {
 			errStr := fmt.Sprintf("no %v field in token", whatThing)
 			return "", errors.New(errStr)
 		}
-	case "is_admin":
-		value, ok = claims["is_admin"].(bool)
-		if !ok {
-			errStr := fmt.Sprintf("no %v field in token", whatThing)
-			return "", errors.New(errStr)
-		}
+		return value, nil
 	}
 
 	return value, nil
