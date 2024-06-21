@@ -111,3 +111,82 @@ func (p *psqlUser) PsqlCheckTwoStepsVerificationIsTrue(email string) (bool, erro
 
 	return true, nil
 }
+
+func (p *psqlUser) PsqlChangeUserName(newUserName, email string) error {
+	stmt, err := p.DB.Prepare(sqlChangeUserName)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(newUserName, email)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *psqlUser) psqlChangeUserFirstName(newFirstName, email string) error {
+	stmt, err := p.DB.Prepare(sqlChangeUserFirstName)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(newFirstName, email)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *psqlUser) psqlChangeUserLastName(newLastName, email string) error {
+	stmt, err := p.DB.Prepare(sqlChangeUserLastName)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(newLastName, email)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *psqlUser) psqlChangeUserEmail(newEmail, actualEmail, password string) error {
+	stmt, err := p.DB.Prepare(sqlChangeUserEmail)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(newEmail, actualEmail, password)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *psqlUser) psqlChangeUserPassword(newPassword, email string) error {
+	stmt, err := p.DB.Prepare(sqlChangeUserPassword)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(newPassword, email)
+	if err != nil {
+		return err
+	}
+	return nil
+}

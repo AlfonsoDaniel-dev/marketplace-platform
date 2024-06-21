@@ -53,11 +53,13 @@ func (H *Handler) UserLogin(c echo.Context) error {
 		ok, err := H.Service.CheckToken(email, accessToken)
 		if err != nil {
 			fmt.Println(err)
+			okchan <- ""
 			response := responses.NewResponse("error", "error while checking token", err)
 			return c.JSON(http.StatusInternalServerError, response)
 		}
 
 		if !ok {
+			okchan <- ""
 			response := responses.NewResponse("error", "error while checking token", nil)
 			return c.JSON(http.StatusUnauthorized, response)
 		}
@@ -69,6 +71,7 @@ func (H *Handler) UserLogin(c echo.Context) error {
 
 		JwtToken, err := auth.GenerateToken(model, "", false)
 		if err != nil {
+			okchan <- ""
 			response := responses.NewResponse("error", "error while login", err)
 			return c.JSON(http.StatusInternalServerError, response)
 		}
