@@ -128,7 +128,7 @@ func (p *psqlUser) PsqlChangeUserName(newUserName, email string) error {
 	return nil
 }
 
-func (p *psqlUser) psqlChangeUserFirstName(newFirstName, email string) error {
+func (p *psqlUser) PsqlChangeUserFirstName(newFirstName, email string) error {
 	stmt, err := p.DB.Prepare(sqlChangeUserFirstName)
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func (p *psqlUser) psqlChangeUserFirstName(newFirstName, email string) error {
 	return nil
 }
 
-func (p *psqlUser) psqlChangeUserLastName(newLastName, email string) error {
+func (p *psqlUser) PsqlChangeUserLastName(newLastName, email string) error {
 	stmt, err := p.DB.Prepare(sqlChangeUserLastName)
 	if err != nil {
 		return err
@@ -160,7 +160,7 @@ func (p *psqlUser) psqlChangeUserLastName(newLastName, email string) error {
 	return nil
 }
 
-func (p *psqlUser) psqlChangeUserEmail(newEmail, actualEmail, password string) error {
+func (p *psqlUser) PsqlChangeUserEmail(newEmail, actualEmail, password string) error {
 	stmt, err := p.DB.Prepare(sqlChangeUserEmail)
 	if err != nil {
 		return err
@@ -176,7 +176,7 @@ func (p *psqlUser) psqlChangeUserEmail(newEmail, actualEmail, password string) e
 	return nil
 }
 
-func (p *psqlUser) psqlChangeUserPassword(newPassword, email string) error {
+func (p *psqlUser) PsqlChangeUserPassword(newPassword, email, oldPassword string) error {
 	stmt, err := p.DB.Prepare(sqlChangeUserPassword)
 	if err != nil {
 		return err
@@ -184,9 +184,10 @@ func (p *psqlUser) psqlChangeUserPassword(newPassword, email string) error {
 
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newPassword, email)
+	_, err = stmt.Exec(newPassword, email, oldPassword)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

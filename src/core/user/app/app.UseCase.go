@@ -13,6 +13,14 @@ type UseCase interface {
 	UploadAddressData(email string, address userModel.Address) error
 	GetUserNameByEmail(email string) (string, error)
 
+	// userUpdates
+
+	ChangeUserName(NewUserName, email string) error
+	ChangeUserFirstName(NewUserFirstName, email string) error
+	ChangeUserLastName(NewUserLastName, email string) error
+	ChangeUserEmail(NewUserEmail, email, password string) error
+	ChangeUserPassword(email, oldpassword, newPassword string) error
+
 	// userGetters
 
 	GetUserIdByEmail(email string) (uuid.UUID, error)

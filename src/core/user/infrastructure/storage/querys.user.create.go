@@ -10,7 +10,7 @@ const sqlInsertAddressOnAddressTable = `INSERT INTO user_addresses (id, user_id,
 
 const sqlChangeUserName = `UPDATE users SET user_name = $1 WHERE email = $2`
 
-const sqlChangeUserPassword = `UPDATE users SET password = $1 WHERE email = $2`
+const sqlChangeUserPassword = `UPDATE users SET password = $1 WHERE email = $2 AND password = $3`
 
 const sqlChangeUserFirstName = `UPDATE users SET first_name = $1 WHERE email = $2`
 

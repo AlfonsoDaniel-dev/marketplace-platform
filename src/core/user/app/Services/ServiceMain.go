@@ -24,7 +24,16 @@ type ServiceInterface interface {
 	SendLoginConfirmation(email string) (string, error)
 	CheckToken(email, token string) (bool, error)
 	CleanToken(email string) error
+	// upload Services
+
 	UploadAddress(email string, form UserDTO.UploadAddressForm) error
+	// update services
+
+	UpdateUserName(form UserDTO.UpdateUserName) error
+	UpdateUserFirstName(form UserDTO.UpdateFirstName) error
+	UpdateUserLastName(form UserDTO.UpdateLastName) error
+	UpdateUserPassword(form UserDTO.UpdatePassword) error
+	UpdateUserEmail(form UserDTO.UpdateEmail) error
 }
 
 func (s *Service) Hello() string {
