@@ -12,7 +12,7 @@ const sqlMigrateUserTable = `CREATE TABLE IF NOT EXISTS users(
     collections_table_id uuid,
     biography VARCHAR(140) NOT NULL,
     age INT NOT NULL,
-    email VARCHAR(60) NOT NULL,
+    email VARCHAR(90) NOT NULL,
     password VARCHAR(350) NOT NULL,
     two_steps_verification BOOLEAN NOT NULL DEFAULT false,
     address_id uuid,
@@ -27,7 +27,6 @@ const sqlMigrateUserTable = `CREATE TABLE IF NOT EXISTS users(
     CONSTRAINT users_id_pk PRIMARY KEY (id),
     CONSTRAINT users_age_ck CHECK (age >= 18),
     CONSTRAINT users_first_and_last_name_uq UNIQUE (first_name, last_name),
-    CONSTRAINT users_email_uq UNIQUE (email),
     CONSTRAINT users_user_name UNIQUE (user_name)
 )`
 

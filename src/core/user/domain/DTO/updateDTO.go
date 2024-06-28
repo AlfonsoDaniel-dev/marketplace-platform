@@ -14,6 +14,12 @@ type UpdateFirstName struct {
 	Common    updateCommon
 }
 
+type UpdateTsvStatus struct {
+	Password string `json:"password"`
+	IsActive bool   `json:"is_active"`
+	Common   updateCommon
+}
+
 type UpdateLastName struct {
 	LastName string `json:"last_name"`
 	Common   updateCommon

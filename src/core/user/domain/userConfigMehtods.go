@@ -101,7 +101,7 @@ func (u *UserDomain) validatePassword(password, email string) (bool, error) {
 		return false, err
 	}
 
-	ok := bcrypt.CompareHashAndPassword(hash, hash)
+	ok := bcrypt.CompareHashAndPassword(hash, []byte(password))
 	if ok != nil {
 		errStr := fmt.Sprintf("Error while checking password. ERR: %v", err)
 		return false, errors.New(errStr)
@@ -116,12 +116,22 @@ func (u *UserDomain) ChangeUserEmail(NewEmail, email, password string) error {
 	}
 
 	ok, err := u.validatePassword(password, email)
-	if err != nil || !ok {
+	if err != nil {
+		fmt.Println(err)
 		errStr := fmt.Sprintf("Error while validating password. may be password is wrong ERR: %v", err)
 		return errors.New(errStr)
+	} else if !ok {
+		fmt.Println("Password is incorrect")
 	}
 
-	err = u.OutputInterface.PsqlChangeUserEmail(NewEmail, email, password)
+	userId, err := u.OutputInterface.PsqlGetUserIdByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Este es el userID: ", userId)
+
+	err = u.OutputInterface.PsqlChangeUserEmail(NewEmail, userId.String())
 	if err != nil {
 		return err
 	}
@@ -141,6 +151,19 @@ func (u *UserDomain) ChangeUserPassword(email, oldpassword, newPassword string) 
 	}
 
 	err = u.OutputInterface.PsqlChangeUserPassword(email, oldpassword, newPassword)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *UserDomain) ChangeUserTsvStatus(email string, value bool) error {
+	if email == "" {
+		return errors.New("please provide a valid email for tsv config")
+	}
+
+	err := u.OutputInterface.PsqlChangeUserTsvStatus(email, value)
 	if err != nil {
 		return err
 	}

@@ -2,10 +2,12 @@ package Userstorage
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/google/uuid"
 	"log"
 	user_model "shopperia/src/common/models"
 	"shopperia/src/core/helpers"
+	"time"
 )
 
 type psqlUser struct {
@@ -118,9 +120,10 @@ func (p *psqlUser) PsqlChangeUserName(newUserName, email string) error {
 		return err
 	}
 
+	now := time.Now().Unix()
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newUserName, email)
+	_, err = stmt.Exec(newUserName, now, email)
 	if err != nil {
 		return err
 	}
@@ -134,9 +137,11 @@ func (p *psqlUser) PsqlChangeUserFirstName(newFirstName, email string) error {
 		return err
 	}
 
+	now := time.Now().Unix()
+
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newFirstName, email)
+	_, err = stmt.Exec(newFirstName, now, email)
 	if err != nil {
 		return err
 	}
@@ -150,9 +155,11 @@ func (p *psqlUser) PsqlChangeUserLastName(newLastName, email string) error {
 		return err
 	}
 
+	now := time.Now().Unix()
+
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newLastName, email)
+	_, err = stmt.Exec(newLastName, now, email)
 	if err != nil {
 		return err
 	}
@@ -160,7 +167,7 @@ func (p *psqlUser) PsqlChangeUserLastName(newLastName, email string) error {
 	return nil
 }
 
-func (p *psqlUser) PsqlChangeUserEmail(newEmail, actualEmail, password string) error {
+func (p *psqlUser) PsqlChangeUserEmail(newEmail, userId string) error {
 	stmt, err := p.DB.Prepare(sqlChangeUserEmail)
 	if err != nil {
 		return err
@@ -168,8 +175,12 @@ func (p *psqlUser) PsqlChangeUserEmail(newEmail, actualEmail, password string) e
 
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newEmail, actualEmail, password)
+	now := time.Now().Unix()
+
+	_, err = stmt.Exec(newEmail, now, userId)
+
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -182,9 +193,27 @@ func (p *psqlUser) PsqlChangeUserPassword(newPassword, email, oldPassword string
 		return err
 	}
 
+	now := time.Now().Unix()
+
 	defer stmt.Close()
 
-	_, err = stmt.Exec(newPassword, email, oldPassword)
+	_, err = stmt.Exec(newPassword, now, oldPassword, email)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *psqlUser) PsqlChangeUserTsvStatus(email string, value bool) error {
+	stmt, err := p.DB.Prepare(sqlChangeTsvStatus)
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(email, value)
 	if err != nil {
 		return err
 	}

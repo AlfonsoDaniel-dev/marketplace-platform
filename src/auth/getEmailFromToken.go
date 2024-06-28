@@ -9,7 +9,7 @@ import (
 )
 
 func GetEmailFromToken(TokenString string) (string, error) {
-	parts := strings.Split(TokenString, ":")
+	parts := strings.Split(TokenString, ".")
 	if len(parts) != 3 {
 		return "", errors.New("invalid token")
 	}
@@ -33,7 +33,7 @@ func GetEmailFromToken(TokenString string) (string, error) {
 }
 
 func GetFromToken(tokenString, whatThing string) (string, error) {
-	parts := strings.Split(tokenString, ":")
+	parts := strings.Split(tokenString, ".")
 	if len(parts) != 3 {
 		return "", errors.New("invalid token")
 	}

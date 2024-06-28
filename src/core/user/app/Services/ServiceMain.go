@@ -22,6 +22,7 @@ type ServiceInterface interface {
 	LoginUser(form models.Login) (string, error)
 	CheckTwoStepsVerification(email string) (bool, error)
 	SendLoginConfirmation(email string) (string, error)
+	SendPasswordEmailConfirmation(email string) (string, error)
 	CheckToken(email, token string) (bool, error)
 	CleanToken(email string) error
 	// upload Services
@@ -34,6 +35,7 @@ type ServiceInterface interface {
 	UpdateUserLastName(form UserDTO.UpdateLastName) error
 	UpdateUserPassword(form UserDTO.UpdatePassword) error
 	UpdateUserEmail(form UserDTO.UpdateEmail) error
+	UpdateUserTsvConfig(form UserDTO.UpdateTsvStatus) error
 }
 
 func (s *Service) Hello() string {

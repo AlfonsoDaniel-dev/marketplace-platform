@@ -102,6 +102,18 @@ func (S *Service) UpdateUserEmail(form UserDTO.UpdateEmail) error {
 		errStr := fmt.Sprintf("change user email error: %v", err)
 		return errors.New(errStr)
 	}
-	
+
+	return nil
+}
+
+func (S *Service) UpdateUserTsvConfig(form UserDTO.UpdateTsvStatus) error {
+	if form.Common.Email == "" {
+		return errors.New("please provide all fields required")
+	}
+
+	if err := S.UseCase.ChangeUserTsvStatus(form.Common.Email, form.IsActive); err != nil {
+		return err
+	}
+
 	return nil
 }

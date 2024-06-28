@@ -20,6 +20,7 @@ type UseCase interface {
 	ChangeUserLastName(NewUserLastName, email string) error
 	ChangeUserEmail(NewUserEmail, email, password string) error
 	ChangeUserPassword(email, oldpassword, newPassword string) error
+	ChangeUserTsvStatus(email string, value bool) error
 
 	// userGetters
 
@@ -27,6 +28,8 @@ type UseCase interface {
 	CheckLogin(email, password string) (bool, error)
 	CheckTwoStepsVerification(email string) (bool, error)
 	SendLoginConfirmationEmail(DestEmail string) (string, error)
+	SendPasswordConfirmationEmail(DestEmail string) (string, error)
+	SendTsvChangesConfirmationEmail(DestEmail string) (string, error)
 	CheckAccessToken(email, token string) (bool, error)
 	CleanAccessToken(email string) error
 

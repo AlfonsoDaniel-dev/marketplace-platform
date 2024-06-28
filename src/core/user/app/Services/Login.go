@@ -65,9 +65,11 @@ func (S *Service) CheckTwoStepsVerification(email string) (bool, error) {
 	}
 
 	ok, err := S.UseCase.CheckTwoStepsVerification(email)
-	if !ok || err != nil {
+	if err != nil {
 		errStr := fmt.Sprintf("User Does not have Two Steps Verification or it was an error: %v", err)
 		return false, errors.New(errStr)
+	} else if !ok {
+		return false, nil
 	}
 
 	return true, nil
@@ -116,4 +118,32 @@ func (S *Service) CleanToken(email string) error {
 	}
 
 	return nil
+}
+
+func (S *Service) SendPasswordEmailConfirmation(email string) (string, error) {
+	if email == "" {
+		return "", errors.New("no email provide")
+	}
+
+	link, err := S.UseCase.SendPasswordConfirmationEmail(email)
+	if err != nil {
+		errStr := fmt.Sprintf("Error while sending password email confirmation. ERR: %v", err)
+		return "", errors.New(errStr)
+	}
+
+	return link, nil
+}
+
+func (S *Service) SendTsvChangeEmail(email string) (string, error) {
+	if email == "" {
+		return "", errors.New("Please provide a valid email")
+	}
+
+	link, err := S.UseCase.SendTsvChangesConfirmationEmail(email)
+	if err != nil {
+		errStr := fmt.Sprintf("Error while sending tsv change email. ERR: %v", err)
+		return "", errors.New(errStr)
+	}
+
+	return link, nil
 }
