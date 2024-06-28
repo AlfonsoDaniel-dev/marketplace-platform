@@ -18,4 +18,4 @@ const sqlChangeUserLastName = `UPDATE users SET last_name = $1, updated_at = $2 
 
 const sqlChangeUserEmail = `UPDATE users SET email = $1, updated_at = $2 WHERE id = $3`
 
-const sqlChangeTsvStatus = `UPDATE users SET two_steps_verification = $1 WHERE id = $2`
+const sqlChangeTsvStatus = `UPDATE users SET two_steps_verification = $1 WHERE email = $2`

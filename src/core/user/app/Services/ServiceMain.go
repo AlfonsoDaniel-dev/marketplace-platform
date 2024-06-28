@@ -23,6 +23,7 @@ type ServiceInterface interface {
 	CheckTwoStepsVerification(email string) (bool, error)
 	SendLoginConfirmation(email string) (string, error)
 	SendPasswordEmailConfirmation(email string) (string, error)
+	SendTsvChangeEmail(email string) (string, error)
 	CheckToken(email, token string) (bool, error)
 	CleanToken(email string) error
 	// upload Services

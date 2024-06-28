@@ -20,6 +20,7 @@ type Handler interface {
 	UpdateUserLastName(c echo.Context) error
 	UpdateUserEmail(c echo.Context) error
 	UpdateUserPassword(c echo.Context) error
+	UpdateTsvStatus(c echo.Context) error
 }
 
 type UserController struct {
@@ -71,5 +72,5 @@ func (c *UserController) userPrivateRoutes() {
 	config.PUT("/update/last_name", c.Handler.UpdateUserLastName)
 	config.PUT("/update/email", c.Handler.UpdateUserEmail)
 	config.PUT("/update/password", c.Handler.UpdateUserPassword)
-	config.PUT("update/TSV")
+	config.PUT("/update/tsv", c.Handler.UpdateTsvStatus)
 }

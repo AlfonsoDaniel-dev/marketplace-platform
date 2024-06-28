@@ -220,6 +220,12 @@ func (H *Handler) UpdateTsvStatus(c echo.Context) error {
 
 	form.Common.Email = email
 
+	_, err = H.Service.SendTsvChangeEmail(email)
+	if err != nil {
+		response := responses.NewResponse("error", "send tsv change email failed", nil)
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
 	okChan := make(chan bool)
 
 	e := c.Echo()
@@ -241,6 +247,12 @@ func (H *Handler) UpdateTsvStatus(c echo.Context) error {
 			return c.JSON(http.StatusBadRequest, response)
 		}
 
+		if err := H.Service.CleanToken(email); err != nil {
+			okChan <- false
+			response := responses.NewResponse("error", "error while cleaning token", nil)
+			return c.JSON(http.StatusInternalServerError, response)
+		}
+
 		okChan <- true
 
 		response := responses.GenerateResponses("ok", "tsv status updated successfully", nil)
@@ -255,7 +267,8 @@ func (H *Handler) UpdateTsvStatus(c echo.Context) error {
 
 	err = H.Service.UpdateUserTsvConfig(form)
 	if err != nil {
-		fmt.Println(err)
+		response := responses.NewResponse("error", "error while updating tsv status", nil)
+		return c.JSON(http.StatusInternalServerError, response)
 	}
 
 	response := responses.GenerateResponses("ok", "tsv status updated successfully", nil)

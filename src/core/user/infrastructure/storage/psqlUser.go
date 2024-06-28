@@ -213,7 +213,7 @@ func (p *psqlUser) PsqlChangeUserTsvStatus(email string, value bool) error {
 
 	defer stmt.Close()
 
-	_, err = stmt.Exec(email, value)
+	_, err = stmt.Exec(value, email)
 	if err != nil {
 		return err
 	}
