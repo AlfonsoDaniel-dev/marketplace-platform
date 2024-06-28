@@ -29,6 +29,19 @@ func (US *UploadService) checkUserHasAMediaRepository(userId uuid.UUID) bool {
 	return false
 }
 
+func (US *UploadService) createFile(name string) (*os.File, error) {
+	if name == "" {
+		return &os.File{}, errors.New("name is empty")
+	}
+
+	file, err := os.Create(name)
+	if err != nil {
+		return &os.File{}, err
+	}
+
+	return file, nil
+}
+
 func (US *UploadService) checkMediaRepository(repositoryPath, collectionNameOpcional string) bool {
 	if collectionNameOpcional != "" {
 		path := filepath.Join(US.OriginPath, repositoryPath, collectionNameOpcional)
@@ -106,15 +119,20 @@ func (US *UploadService) upload(repositoryPath, fileName string, image bytes.Buf
 
 	}
 
-	fileName = fileName + ".jpg"
+	file, err := US.createFile(fileName)
+	if err != nil {
+		return models.ImageData{}, err
+	}
 
 	dest := filepath.Join(US.OriginPath, repositoryPath, fileName)
 
 	imageBytes := image.Bytes()
-	err := os.WriteFile(dest, imageBytes, 0644)
+	_, err = file.Write(imageBytes)
 	if err != nil {
 		return models.ImageData{}, err
 	}
+
+	defer file.Close()
 
 	imageId := uuid.New()
 
