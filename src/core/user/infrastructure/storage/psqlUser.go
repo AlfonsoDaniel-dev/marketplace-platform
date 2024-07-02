@@ -2,11 +2,11 @@ package Userstorage
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/google/uuid"
 	"log"
 	user_model "shopperia/src/common/models"
 	"shopperia/src/core/helpers"
+	"shopperia/src/db"
 	"time"
 )
 
@@ -21,18 +21,21 @@ func NewPsqlUser(db *sql.DB) *psqlUser {
 }
 
 func (p *psqlUser) PsqlCreateUserWithOutAddress(user user_model.User) error {
-	stmt, err := p.DB.Prepare(sqlCreateUser)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return err
 	}
-
-	defer stmt.Close()
 
 	nullTime := helpers.IntToNull(user.UpdatedAt)
 
 	nullBiography := helpers.StringToNull(user.Biography)
 
-	_, err = stmt.Exec(user.Id, user.FirstName, user.LastName, user.UserName, nullBiography, user.Age, user.Email, user.Password, user.TwoStepsVerfication, user.CreatedAt, nullTime)
+	if _, err := db.ExecQuery(tx, sqlCreateUser, user.Id, user.FirstName, user.LastName, user.UserName, nullBiography, user.Age, user.Email, user.Password, user.TwoStepsVerfication, user.CreatedAt, nullTime); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return err
 	}
@@ -42,179 +45,180 @@ func (p *psqlUser) PsqlCreateUserWithOutAddress(user user_model.User) error {
 }
 
 func (p *psqlUser) PsqlGetUserIdByEmail(email string) (uuid.UUID, error) {
-	stmt, err := p.DB.Prepare(sqlGetUserIdByEmail)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return uuid.Nil, err
 	}
-
-	defer stmt.Close()
-
-	row := stmt.QueryRow(email)
-	var id uuid.UUID
-	err = row.Scan(&id)
+	res, err := db.RunQuery(tx, sqlGetUserIdByEmail, email)
 	if err != nil {
+		tx.Rollback()
 		return uuid.Nil, err
 	}
+
+	id, err := db.ParseAnyToUUID(res)
 
 	return id, nil
 }
 
 func (p *psqlUser) PsqlInsertAddressData(address user_model.Address) error {
-	stmt, err := p.DB.Prepare(sqlInsertUserAddress)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return err
 	}
 
-	defer stmt.Close()
+	_, err = db.ExecQuery(tx, sqlInsertUserAddress)
 
-	_, err = stmt.Exec(address.ID, address.UserId, address.Street, address.City, address.State, address.PostalCode, address.Country, address.CreatedAt)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
+
+	tx.Commit()
 
 	return nil
 }
 
 func (p *psqlUser) PsqlGetUserNameByEmail(email string) (string, error) {
-	stmt, err := p.DB.Prepare(sqlGetUserNameByEmail)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return "", err
 	}
 
-	defer stmt.Close()
-
-	var userName string
-
-	row := stmt.QueryRow(email)
-
-	err = row.Scan(&userName)
+	res, err := db.RunQuery(tx, sqlGetUserNameByEmail, email)
 	if err != nil {
+		tx.Rollback()
 		return "", err
 	}
 
-	return email, nil
+	userName, err := db.ParseAnyToString(res[0])
+	if err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	tx.Commit()
+
+	return userName, nil
 }
 
 func (p *psqlUser) PsqlCheckTwoStepsVerificationIsTrue(email string) (bool, error) {
-	stmt, err := p.DB.Prepare(sqlCheckUserTsvIsTrue)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return false, err
 	}
 
-	defer stmt.Close()
-
-	row := stmt.QueryRow(email)
-
-	var ok bool
-	err = row.Scan(&ok)
-	if err != nil || !ok {
+	res, err := db.RunQuery(tx, sqlCheckUserTsvIsTrue, email)
+	if err != nil {
+		tx.Rollback()
 		return false, err
+	}
+
+	status, err := db.ParseAnyToBool(res[0])
+	if err != nil {
+		tx.Rollback()
+		return false, err
+	}
+
+	tx.Commit()
+
+	if !status {
+		return false, nil
 	}
 
 	return true, nil
 }
 
 func (p *psqlUser) PsqlChangeUserName(newUserName, email string) error {
-	stmt, err := p.DB.Prepare(sqlChangeUserName)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return err
 	}
 
 	now := time.Now().Unix()
-	defer stmt.Close()
-
-	_, err = stmt.Exec(newUserName, now, email)
+	_, err = db.ExecQuery(tx, sqlChangeUserName, newUserName, now, email)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
+
+	tx.Commit()
 
 	return nil
 }
 
 func (p *psqlUser) PsqlChangeUserFirstName(newFirstName, email string) error {
-	stmt, err := p.DB.Prepare(sqlChangeUserFirstName)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return err
 	}
 
 	now := time.Now().Unix()
-
-	defer stmt.Close()
-
-	_, err = stmt.Exec(newFirstName, now, email)
+	_, err = db.ExecQuery(tx, sqlChangeUserFirstName, newFirstName, now, email)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
+	tx.Commit()
 	return nil
 }
 
 func (p *psqlUser) PsqlChangeUserLastName(newLastName, email string) error {
-	stmt, err := p.DB.Prepare(sqlChangeUserLastName)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return err
 	}
-
 	now := time.Now().Unix()
 
-	defer stmt.Close()
-
-	_, err = stmt.Exec(newLastName, now, email)
+	_, err = db.ExecQuery(tx, sqlChangeUserLastName, newLastName, now, email)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
+	tx.Commit()
 	return nil
 }
 
 func (p *psqlUser) PsqlChangeUserEmail(newEmail, userId string) error {
-	stmt, err := p.DB.Prepare(sqlChangeUserEmail)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return err
 	}
-
-	defer stmt.Close()
 
 	now := time.Now().Unix()
-
-	_, err = stmt.Exec(newEmail, now, userId)
-
-	if err != nil {
-		fmt.Println(err)
+	if _, err := db.ExecQuery(tx, sqlChangeUserEmail, newEmail, now, userId); err != nil {
+		tx.Rollback()
 		return err
 	}
 
+	tx.Commit()
 	return nil
 }
 
 func (p *psqlUser) PsqlChangeUserPassword(newPassword, email, oldPassword string) error {
-	stmt, err := p.DB.Prepare(sqlChangeUserPassword)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return err
 	}
 
-	now := time.Now().Unix()
-
-	defer stmt.Close()
-
-	_, err = stmt.Exec(newPassword, now, oldPassword, email)
-	if err != nil {
+	if _, err := db.ExecQuery(tx, sqlChangeUserPassword, newPassword, email, oldPassword); err != nil {
+		tx.Rollback()
 		return err
 	}
 
+	tx.Commit()
 	return nil
 }
 
 func (p *psqlUser) PsqlChangeUserTsvStatus(email string, value bool) error {
-	stmt, err := p.DB.Prepare(sqlChangeTsvStatus)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return err
 	}
 
-	defer stmt.Close()
-
-	_, err = stmt.Exec(value, email)
-	if err != nil {
+	if _, err := db.ExecQuery(tx, sqlChangeTsvStatus, value, email); err != nil {
+		tx.Rollback()
 		return err
 	}
 

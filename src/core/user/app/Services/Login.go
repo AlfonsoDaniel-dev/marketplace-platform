@@ -29,9 +29,11 @@ func (S *Service) CheckLoginData(form models.Login) (bool, error) {
 	}
 
 	ok, err := S.UseCase.CheckLogin(form.Email, form.Password)
-	if err != nil || !ok {
+	if err != nil {
 		errStr := fmt.Sprintf("it was an error checking login information, may be email or password ar null")
 		return false, errors.New(errStr)
+	} else if !ok {
+		return false, nil
 	}
 
 	return true, nil

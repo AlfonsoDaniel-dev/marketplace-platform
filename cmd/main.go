@@ -5,7 +5,6 @@ import (
 	"os"
 	"shopperia/cmd/config"
 	"shopperia/src/auth"
-	"shopperia/src/database/migrations"
 )
 
 func main() {
@@ -20,13 +19,13 @@ func main() {
 	if err := auth.LoadFiles("./cmd/certificates/app.rsa.pub", "./cmd/certificates/app.rsa"); err != nil {
 		log.Fatalf("Error loading certificates: %v", err)
 	}
+	/*
+		migrator := migrations.NewMigrator(db)
 
-	migrator := migrations.NewMigrator(db)
-
-	if err := migrator.Migrate(); err != nil {
-		log.Fatalf("Error running migrations: %v", err)
-	}
-
+		if err := migrator.Migrate(); err != nil {
+			log.Fatalf("Error running migrations: %v", err)
+		}
+	*/
 	server := config.NewHttp(db)
 
 	PORT := os.Getenv("APP_PORT")

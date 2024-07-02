@@ -20,6 +20,15 @@ func (H *Handler) UserLogin(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
+	ok, err := H.Service.CheckLoginData(form)
+	if err != nil {
+		response := responses.NewResponse("error", "error checking login", nil)
+		return c.JSON(http.StatusInternalServerError, response)
+	} else if !ok {
+		response := responses.NewResponse("error", "login failed data not correct", nil)
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
 	HasTSV, err := H.Service.CheckTwoStepsVerification(form.Email)
 	if err != nil {
 		fmt.Println(err)

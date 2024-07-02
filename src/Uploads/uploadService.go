@@ -29,12 +29,12 @@ func (US *UploadService) checkUserHasAMediaRepository(userId uuid.UUID) bool {
 	return false
 }
 
-func (US *UploadService) createFile(name string) (*os.File, error) {
-	if name == "" {
+func (US *UploadService) createFile(AbsoluteFilePath string) (*os.File, error) {
+	if AbsoluteFilePath == "" {
 		return &os.File{}, errors.New("name is empty")
 	}
 
-	file, err := os.Create(name)
+	file, err := os.Create(AbsoluteFilePath)
 	if err != nil {
 		return &os.File{}, err
 	}
@@ -119,14 +119,15 @@ func (US *UploadService) upload(repositoryPath, fileName string, image bytes.Buf
 
 	}
 
-	file, err := US.createFile(fileName)
+	dest := filepath.Join(US.OriginPath, repositoryPath, fileName)
+
+	file, err := US.createFile(dest)
 	if err != nil {
 		return models.ImageData{}, err
 	}
 
-	dest := filepath.Join(US.OriginPath, repositoryPath, fileName)
-
 	imageBytes := image.Bytes()
+
 	_, err = file.Write(imageBytes)
 	if err != nil {
 		return models.ImageData{}, err

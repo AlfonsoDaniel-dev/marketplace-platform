@@ -65,7 +65,8 @@ const sqlMigrateCollectionsTable = `CREATE TABLE IF NOT EXISTS collections(
 const sqlMigrateImagesTable = `CREATE TABLE IF NOT EXISTS images(
     id UUID NOT NULL DEFAULT uuid_generate_v4(),
     user_id uuid NOT NULL,
-    collection_id uuid NOT NULL,
+    collection_id uuid,
+    user_repository_path VARCHAR(80) NOT NULL,
     file_name VARCHAR(100) NOT NULL,
     file_path VARCHAR(150) NOT NULL,
     
@@ -271,11 +272,11 @@ const sqlMigratePurchaseProductTable = `CREATE TABLE IF NOT EXISTS purchase_prod
     status VARCHAR(10) NOT NULL DEFAULT '',
     product_id UUID NOT NULL,
     quantity INT NOT NULL DEFAULT 0,
-    total REAL NOT NULL DEFAULT 0.0
+    total REAL NOT NULL DEFAULT 0.0,
     
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP,
-    cancel_at TIMESTAMP,
+    cancel_at TIMESTAMP
 )`
 
 /*

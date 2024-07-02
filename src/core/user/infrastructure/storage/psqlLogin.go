@@ -1,45 +1,53 @@
 package Userstorage
 
+import (
+	"fmt"
+	"shopperia/src/db"
+)
+
 func (p *psqlUser) PsqlGetHashPassword(email string) ([]byte, error) {
-	stmt, err := p.DB.Prepare(sqlGetHashedPasswordFromEmail)
+	tx, err := p.DB.Begin()
 	if err != nil {
-		return []byte(""), err
+		return nil, err
 	}
 
-	defer stmt.Close()
-
-	row := stmt.QueryRow(email)
+	res, err := db.RunQuery(tx, sqlGetHashedPasswordFromEmail, email)
 	if err != nil {
-		return []byte(""), err
+		tx.Rollback()
+		return nil, err
 	}
 
-	var passwordFromDB string
+	tx.Commit()
 
-	err = row.Scan(&passwordFromDB)
+	hashPassword, err := db.ParseAnyToString(res[0])
+	if err != nil {
+		return nil, err
+	}
 
-	hashPassword := []byte(passwordFromDB)
-
-	return hashPassword, nil
+	return []byte(hashPassword), nil
 }
 
 func (p *psqlUser) PsqlVerifyEmailExists(email string) (string, error) {
-	stmt, err := p.DB.Prepare(sqlLoginVerifyEmailExists)
+	tx, err := p.DB.Begin()
 	if err != nil {
 		return "", err
 	}
 
-	defer stmt.Close()
-
-	row := stmt.QueryRow(email)
-
-	var existingEmail string
-
-	err = row.Scan(&existingEmail)
+	res, err := db.RunQuery(tx, sqlLoginVerifyEmailExists, email)
 	if err != nil {
+		tx.Rollback()
 		return "", err
 	}
 
-	return email, nil
+	fmt.Println(res[0])
+	existingEmail, err := db.ParseAnyToString(res[0])
+	if err != nil {
+		tx.Rollback()
+		return "", err
+	}
+
+	tx.Commit()
+	return existingEmail, nil
 }
 
 func (p *psqlUser) PsqlInsertTsvCode(email, code string) (string, error) {

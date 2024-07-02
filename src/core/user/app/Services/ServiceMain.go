@@ -20,6 +20,7 @@ type ServiceInterface interface {
 	Hello() string
 	Register(register UserDTO.RegisterDTO) error
 	LoginUser(form models.Login) (string, error)
+	CheckLoginData(form models.Login) (bool, error)
 	CheckTwoStepsVerification(email string) (bool, error)
 	SendLoginConfirmation(email string) (string, error)
 	SendPasswordEmailConfirmation(email string) (string, error)
