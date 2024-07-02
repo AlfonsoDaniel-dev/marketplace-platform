@@ -30,75 +30,6 @@ const sqlMigrateUserTable = `CREATE TABLE IF NOT EXISTS users(
     CONSTRAINT users_user_name UNIQUE (user_name)
 )`
 
-const sqlMigrateUserCollectionTable = `CREATE TABLE IF NOT EXISTS user_collections(
-    id uuid NOT NULL DEFAULT uuid_generate_v4(),
-    user_id uuid NOT NULL DEFAULT uuid_generate_v4(),
-    
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP
-)`
-
-const sqlUsersRelationWithUserCollectionsTable = `ALTER TABLE users ADD CONSTRAINT users_collections_table_id_fk FOREIGN KEY (collections_table_id) REFERENCES user_collections (id) ON UPDATE CASCADE`
-
-const sqlUserCollectionsRelationWithUsersTable = `ALTER TABLE user_collections ADD CONSTRAINT user_collections_user_id FOREIGN KEY (user_id) REFERENCES users_id ON UPDATE CASCADE ON DELETE RESTRICT`
-
-const sqlMigrateCollectionsTable = `CREATE TABLE IF NOT EXISTS collections(
-    id UUID NOT NULL DEFAULT uuid_generate_v4(),
-    user_id uuid NOT NULL,
-    user_collections_id uuid NOT NULL,
-    collection_name VARCHAR(100) NOT NULL,
-    collection_description VARCHAR(140),
-    
-    collection_path VARCHAR(250) NOT NULL,
-    
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP,
-    
-    CONSTRAINT collections_id_pk PRIMARY KEY (id),
-    CONSTRAINT collections_name_uq UNIQUE (collection_name),
-    CONSTRAINT collections_user_id_fk FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE,
-    CONSTRAINT collections_user_collections_id FOREIGN KEY (user_collections_id) REFERENCES user_collections (id) ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT collections_collection_path_ck CHECK (collection == '')
-    
-)`
-
-const sqlMigrateImagesTable = `CREATE TABLE IF NOT EXISTS images(
-    id UUID NOT NULL DEFAULT uuid_generate_v4(),
-    user_id uuid NOT NULL,
-    collection_id uuid,
-    user_repository_path VARCHAR(80) NOT NULL,
-    file_name VARCHAR(100) NOT NULL,
-    file_path VARCHAR(150) NOT NULL,
-    
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP,
-        
-    CONSTRAINT images_id_pk PRIMARY KEY (id),
-    CONSTRAINT images_file_name_ck CHECK (file_name = ''),
-    CONSTRAINT images_file_path_ck CHECK (file_path = ''),
-    CONSTRAINT images_user_id_fk FOREIGN KEY (user_id)
-    REFERENCES users (id)
-    ON UPDATE CASCADE
-    ON DELETE RESTRICT
-)`
-
-const sqlMigrateProfilePicturesId = `CREATE TABLE IF NOT EXISTS profilePictures(
-    id UUID NOT NULL DEFAULT uuid_generate_v4(),
-    user_id uuid NOT NULL,
-    user_Repository_path VARCHAR(140) NOT NULL,
-    file_name VARCHAR(100) NOT NULL,
-    file_path VARCHAR(150) NOT NULL,
-    
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP,
-    
-    CONSTRAINT profilePictures_id_pk PRIMARY KEY (id),
-    CONSTRAINT profilePictures_file_name_ck CHECK (file_name = ''),
-    CONSTRAINT profilePictures_file_path_ck CHECK (file_path = ''),
-    CONSTRAINT profilePictures_user_id_fk FOREIGN KEY (user_id)
-    REFERENCES users (id) ON UPDATE CASCADE ON DELETE RESTRICT
-)`
-
 const sqlMigrateUserAddressesTable = `CREATE TABLE IF NOT EXISTS user_addresses(
     id uuid NOT NULL DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
@@ -125,8 +56,6 @@ const sqlAddConstraintForUserWithAddress = `
 	ON UPDATE CASCADE
 `
 
-/*
-
 const sqlMigrateUserRatingTable = `CREATE TABLE IF NOT EXISTS user_ratings (
     id UUID NOT NULL DEFAULT uuid_generate_v4(),
     user_rated_id UUID NOT NULL,
@@ -142,10 +71,6 @@ const sqlMigrateUserRatingTable = `CREATE TABLE IF NOT EXISTS user_ratings (
     REFERENCES users (id)
     ON UPDATE CASCADE,
 )`
-/*
-*/
-
-/*
 
 const sqlMigrateUserCommentReviewTable = `CREATE TABLE IF NOT EXISTS user_comment_reviews (
     comment_review_id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -168,7 +93,7 @@ const sqlMigrateUserCommentReviewTable = `CREATE TABLE IF NOT EXISTS user_commen
     CONSTRAINT user_comment_reviews_user_reviewed_id_fk FOREIGN KEY (user_reviewed_id)
     REFERENCES users (id)
     ON UPDATE CASCADE
-)` */
+)`
 
 /*
 const sqlMigrateShopThemesTable = `CREATE TABLE products_and_shop_themes(

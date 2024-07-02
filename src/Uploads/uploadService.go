@@ -130,10 +130,11 @@ func (US *UploadService) upload(repositoryPath, fileName string, image bytes.Buf
 
 	_, err = file.Write(imageBytes)
 	if err != nil {
+		file.Close()
 		return models.ImageData{}, err
 	}
 
-	defer file.Close()
+	file.Close()
 
 	imageId := uuid.New()
 

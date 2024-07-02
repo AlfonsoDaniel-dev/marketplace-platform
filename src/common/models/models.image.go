@@ -15,6 +15,7 @@ type Image struct {
 
 type UploadImageForm struct {
 	UserID             uuid.UUID
+	UserEmail          string
 	FileName           string
 	ImageData          bytes.Buffer
 	UserRepositoryPath string

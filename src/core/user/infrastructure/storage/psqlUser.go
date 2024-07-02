@@ -224,3 +224,5 @@ func (p *psqlUser) PsqlChangeUserTsvStatus(email string, value bool) error {
 
 	return nil
 }
+
+func (p *psqlUser) PsqlInsertProfilePictureData(fileName, filePath, )
