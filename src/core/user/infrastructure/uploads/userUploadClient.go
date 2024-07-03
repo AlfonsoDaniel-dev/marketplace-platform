@@ -3,19 +3,22 @@ package userUploads
 import (
 	"bytes"
 	"errors"
+	"github.com/google/uuid"
 	"shopperia/src/Uploads"
 	"shopperia/src/common/models"
 )
 
 type uploadClient interface {
+	MakeNewDirectory(fatherDirectory, NewDirName string) (string, error)
+	MakeNewMediaRepositoryForUser(userId uuid.UUID) (string, error)
+
+	CheckUserHasAMediaRepository(userId uuid.UUID) bool
+	GetUserRepositoryPath(userId uuid.UUID) (string, error)
+
 	UploadMedia(image models.UploadImageForm) (models.ImageData, error)
-	UploadProfileImage(image models.UploadImageForm) (models.ImageData, error)
-	GetMedia(filepath string) (bytes.Buffer, error)
-	SaveMultipleMediaResources(images []models.UploadImageForm) ([]models.ImageData, error)
-	CreateCollection(form models.CreateCollectionForm) (models.CollectionData, error)
-	GetMultipleMediaResources(repositoryPath string, fileNames []string) ([]models.GetImage, error)
-	InsertMultipleMediaIntoCollection(collectionPath models.CollectionData, images []models.UploadImageForm) ([]models.ImageData, error)
-	GetMultipleDataFromPath(Fatherpath string, filenames []string) ([]models.GetImageData, error)
+	UploadMultipleMediaResources(images []models.UploadImageForm) ([]models.ImageData, error)
+
+	GetMedia(filePath string) (bytes.Buffer, error)
 }
 
 var userPath string = "./src/core/user/infrastructure/uploads/main/repository"

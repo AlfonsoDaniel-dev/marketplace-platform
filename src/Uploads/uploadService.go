@@ -26,9 +26,12 @@ func (US *UploadService) createFile(AbsoluteFilePath string) (*os.File, error) {
 	return file, nil
 }
 
-func (US *UploadService) upload(repositoryPath, fileName string, image bytes.Buffer, userId uuid.UUID) (models.ImageData, error) {
+func (US *UploadService) upload(repositoryPath, fileName, fileExtension string, image bytes.Buffer, userId uuid.UUID) (models.ImageData, error) {
+	imageId := uuid.New()
 
-	dest := filepath.Join(US.OriginPath, repositoryPath, fileName)
+	name := imageId.String() + "_" + fileName + fileExtension
+
+	dest := filepath.Join(US.OriginPath, repositoryPath, name)
 
 	file, err := US.createFile(dest)
 	if err != nil {
@@ -44,8 +47,6 @@ func (US *UploadService) upload(repositoryPath, fileName string, image bytes.Buf
 	}
 
 	file.Close()
-
-	imageId := uuid.New()
 
 	imageData := models.ImageData{
 		UserId:              userId,

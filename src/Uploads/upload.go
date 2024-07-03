@@ -10,7 +10,7 @@ import (
 func (US *UploadService) UploadMedia(image models.UploadImageForm) (models.ImageData, error) {
 	image.FileName = image.FileName + image.UserID.String() + time.Now().String()
 
-	imageData, err := US.upload(image.UserRepositoryPath, image.FileName, image.ImageData, image.UserID)
+	imageData, err := US.upload(image.UserRepositoryPath, image.FileName, image.FileExtension, image.ImageData, image.UserID)
 	if err != nil {
 		return models.ImageData{}, err
 	}
@@ -21,7 +21,7 @@ func (US *UploadService) UploadMedia(image models.UploadImageForm) (models.Image
 func (US *UploadService) UploadProfileImage(image models.UploadImageForm) (models.ImageData, error) {
 	image.FileName = image.UserID.String() + "_" + image.FileName + image.UserID.String() + "profilePic" + time.Now().String()
 
-	imageData, err := US.upload(image.UserRepositoryPath, image.FileName, image.ImageData, image.UserID)
+	imageData, err := US.upload(image.UserRepositoryPath, image.FileName, image.FileExtension, image.ImageData, image.UserID)
 	if err != nil {
 		return models.ImageData{}, err
 	}
@@ -29,7 +29,7 @@ func (US *UploadService) UploadProfileImage(image models.UploadImageForm) (model
 	return imageData, nil
 }
 
-func (US *UploadService) SaveMultipleMediaResources(images []models.UploadImageForm) ([]models.ImageData, error) {
+func (US *UploadService) UploadMultipleMediaResources(images []models.UploadImageForm) ([]models.ImageData, error) {
 	if len(images) == 0 {
 		return []models.ImageData{}, errors.New("no images to upload")
 	}
@@ -47,7 +47,7 @@ func (US *UploadService) SaveMultipleMediaResources(images []models.UploadImageF
 			return nil, errors.New(errStr)
 		}
 
-		ImageData, err := US.upload(image.UserRepositoryPath, image.FileName, image.ImageData, image.UserID)
+		ImageData, err := US.upload(image.UserRepositoryPath, image.FileName, image.FileExtension, image.ImageData, image.UserID)
 		if err != nil {
 			errStr := fmt.Sprintf("Hubo un error al guardar la imagen %v, ERR: %v", image.FileName, err)
 			return nil, errors.New(errStr)

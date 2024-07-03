@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"errors"
 	"os"
-	"path/filepath"
 	"shopperia/src/common/models"
 )
 
-func (US *UploadService) GetMedia(filePath string) (bytes.Buffer, error) {
-	if filePath == "" {
-		return bytes.Buffer{}, errors.New("No file path provided")
+func (US *UploadService) GetMedia(repositoryPath, fileName, fileExtension string) (bytes.Buffer, error) {
+	if fileName == "" || repositoryPath == "" {
+		return bytes.Buffer{}, errors.New("No path or name provided")
 	}
-	image, err := os.ReadFile(filePath)
+
+	completePath := US.OriginPath + "/" + repositoryPath + "/" + fileName + "." + fileExtension
+	image, err := os.ReadFile(completePath)
 	if err != nil {
 		return bytes.Buffer{}, err
 	}
@@ -27,7 +28,7 @@ func (US *UploadService) GetMedia(filePath string) (bytes.Buffer, error) {
 	return buf, nil
 }
 
-func (US *UploadService) GetMultipleMediaResources(repositoryPath string, filenames []string) ([]models.GetImage, error) {
+func (US *UploadService) GetMultipleMediaResources(repositoryPath string, filenames []models.GetImageForm) ([]models.GetImage, error) {
 	if repositoryPath == "" || len(filenames) == 0 {
 		return nil, errors.New("no path to search")
 	}
@@ -35,15 +36,15 @@ func (US *UploadService) GetMultipleMediaResources(repositoryPath string, filena
 	var images []models.GetImage = make([]models.GetImage, len(filenames))
 	for _, filename := range filenames {
 
-		totalPath := filepath.Join(repositoryPath, filename)
-
-		img, err := US.GetMedia(totalPath)
+		img, err := US.GetMedia(repositoryPath, filename.FileName, filename.FileExtension)
 		if err != nil {
 			return nil, err
 		}
 
+		name := filename.FileName + "." + filename.FileExtension
+
 		image := models.GetImage{
-			FileName:    filename,
+			FileName:    name,
 			ImageBuffer: img,
 		}
 
