@@ -14,8 +14,7 @@ const sqlMigrateCollectionsTable = `CREATE TABLE IF NOT EXISTS collections(
     CONSTRAINT collections_id_pk PRIMARY KEY (id),
     CONSTRAINT collections_name_uq UNIQUE (collection_name),
     CONSTRAINT collections_user_id_fk FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE,
-    CONSTRAINT collections_user_collections_id FOREIGN KEY (user_collections_id) REFERENCES user_collections (id) ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT collections_collection_path_ck CHECK (collection == '')
+    CONSTRAINT collections_collection_path_ck CHECK (collection_path != '')
 )`
 
 const sqlMigrateImagesTable = `CREATE TABLE IF NOT EXISTS images(
@@ -31,15 +30,15 @@ const sqlMigrateImagesTable = `CREATE TABLE IF NOT EXISTS images(
     updated_at TIMESTAMP,
         
     CONSTRAINT images_id_pk PRIMARY KEY (id),
-    CONSTRAINT images_collection_path_ck CHECK (collection_path == ''),
-    CONSTRAINT images_file_name_ck CHECK (file_name = ''),
-    CONSTRAINT images_file_path_ck CHECK (file_path = ''),
+    CONSTRAINT images_collection_path_ck CHECK (collection_path != ''),
+    CONSTRAINT images_file_name_ck CHECK (file_name != ''),
+    CONSTRAINT images_file_path_ck CHECK (file_path != ''),
     CONSTRAINT images_user_id_fk FOREIGN KEY (user_id)
     REFERENCES users (id)
     ON UPDATE CASCADE
     ON DELETE RESTRICT,
-    CONSTRAINT images_images_collection_path_fk FOREIGN KEY (collection_path)
-    REFERENCES collections (collection_path)
+    CONSTRAINT images_collection_id_fk FOREIGN KEY (collection_id)
+    REFERENCES collections (id)
     ON UPDATE CASCADE
     ON DELETE RESTRICT
 )`

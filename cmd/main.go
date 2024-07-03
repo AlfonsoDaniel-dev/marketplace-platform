@@ -5,6 +5,7 @@ import (
 	"os"
 	"shopperia/cmd/config"
 	"shopperia/src/auth"
+	"shopperia/src/db/migrations"
 )
 
 func main() {
@@ -14,19 +15,20 @@ func main() {
 		log.Fatalf("Error validating environment variables: %v", err)
 	}
 
-	db := config.ConnectPostgresDB()
+	database := config.ConnectPostgresDB()
 
 	if err := auth.LoadFiles("./cmd/certificates/app.rsa.pub", "./cmd/certificates/app.rsa"); err != nil {
 		log.Fatalf("Error loading certificates: %v", err)
 	}
-	/*
-		migrator := migrations.NewMigrator(db)
 
-		if err := migrator.Migrate(); err != nil {
-			log.Fatalf("Error running migrations: %v", err)
-		}
-	*/
-	server := config.NewHttp(db)
+	migrator := migrations.NewMigrator(database)
+
+	err := migrator.Migrate()
+	if err != nil {
+		log.Fatalf("Error running migrations: %v", err)
+	}
+
+	server := config.NewHttp(database)
 
 	PORT := os.Getenv("APP_PORT")
 	HOST := os.Getenv("APP_HOST")

@@ -26,7 +26,7 @@ func ConnectPostgresDB() *sql.DB {
 
 	db.ConnectToDatabase(connStr)
 
-	db := db.PoodDB()
+	database := db.PooldDB()
 
-	return db
+	return database
 }

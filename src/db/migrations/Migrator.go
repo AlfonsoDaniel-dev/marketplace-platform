@@ -15,8 +15,8 @@ type Migrator struct {
 	Db *sql.DB
 }
 
-func NewMigrator(db *sql.DB) *Migrator {
-	return &Migrator{
+func NewMigrator(db *sql.DB) Migrator {
+	return Migrator{
 		Db: db,
 	}
 }
@@ -28,14 +28,14 @@ func (m *Migrator) Migrate() error {
 	}
 
 	for _, query := range querys {
-		_, err := db.ExecQuery(tx, query, 0)
+		_, err := db.ExecQuery(tx, query)
 		if err != nil {
 			fmt.Println(query)
 			return err
 		}
 	}
 
-	defer tx.Commit()
+	tx.Commit()
 
 	log.Println("Migraciones Realizadas")
 

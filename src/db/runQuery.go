@@ -57,7 +57,7 @@ func RunQuery(tx *sql.Tx, query string, params ...any) ([]any, error) {
 
 func ExecQuery(tx *sql.Tx, query string, params ...any) (int64, error) {
 	if query == "" {
-		return 0, errors.New("empty query or params")
+		return 0, errors.New("empty query")
 	} else if len(params) == 0 {
 		stmt, err := tx.Prepare(query)
 		if err != nil {
@@ -67,6 +67,10 @@ func ExecQuery(tx *sql.Tx, query string, params ...any) (int64, error) {
 		defer stmt.Close()
 
 		res, err := stmt.Exec()
+		if err != nil {
+			tx.Rollback()
+			return 0, err
+		}
 		rowsAff, err := res.RowsAffected()
 		if err != nil {
 			return rowsAff, err
