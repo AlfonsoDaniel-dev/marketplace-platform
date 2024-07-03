@@ -38,6 +38,7 @@ type Collection struct {
 	ID             uuid.UUID `json:"id"`
 	UserId         uuid.UUID `json:"user_id"`
 	CollectionName string    `json:"collection_name"`
+	Cover          Image     `json:"cover_photo"`
 	Description    string    `json:"description"`
 	Path           string    `json:"path"`
 	Content        []Image   `json:"content"`

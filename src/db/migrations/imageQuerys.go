@@ -4,12 +4,14 @@ const sqlMigrateCollectionsTable = `CREATE TABLE IF NOT EXISTS collections(
     id UUID NOT NULL DEFAULT uuid_generate_v4(),
     user_id uuid NOT NULL,
     collection_name VARCHAR(100) NOT NULL,
+    cover_image_id uuid,
     collection_description VARCHAR(140),
     
     collection_path VARCHAR(250) NOT NULL,
     
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP,
+    
     
     CONSTRAINT collections_id_pk PRIMARY KEY (id),
     CONSTRAINT collections_name_uq UNIQUE (collection_name),
@@ -30,7 +32,6 @@ const sqlMigrateImagesTable = `CREATE TABLE IF NOT EXISTS images(
     updated_at TIMESTAMP,
         
     CONSTRAINT images_id_pk PRIMARY KEY (id),
-    CONSTRAINT images_collection_path_ck CHECK (collection_path != ''),
     CONSTRAINT images_file_name_ck CHECK (file_name != ''),
     CONSTRAINT images_file_path_ck CHECK (file_path != ''),
     CONSTRAINT images_user_id_fk FOREIGN KEY (user_id)
