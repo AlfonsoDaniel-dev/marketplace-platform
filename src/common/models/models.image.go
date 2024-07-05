@@ -15,7 +15,9 @@ type Image struct {
 
 type UploadImageForm struct {
 	UserID             uuid.UUID
+	UserEmail          string
 	FileName           string
+	FileExtension      string
 	ImageData          bytes.Buffer
 	UserRepositoryPath string
 }
@@ -28,6 +30,11 @@ type ImageData struct {
 	ImagePath           string
 }
 
+type GetImageForm struct {
+	FileName      string
+	FileExtension string
+}
+
 type GetImage struct {
 	FileName    string
 	ImageBuffer bytes.Buffer
@@ -37,6 +44,7 @@ type Collection struct {
 	ID             uuid.UUID `json:"id"`
 	UserId         uuid.UUID `json:"user_id"`
 	CollectionName string    `json:"collection_name"`
+	Cover          Image     `json:"cover_photo"`
 	Description    string    `json:"description"`
 	Path           string    `json:"path"`
 	Content        []Image   `json:"content"`

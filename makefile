@@ -13,3 +13,9 @@ START:
 	docker start $(DB_CONTAINER_NAME)
 DROP:
 	docker rm $(DB_CONTAINER_NAME)
+RUN:
+	go run ./cmd .
+BUILD:
+	go build -o shopperia ./cmd/main.go
+REMOVE_BINARY:
+	rm shopperia

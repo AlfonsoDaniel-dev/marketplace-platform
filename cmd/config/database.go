@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"shopperia/src/database"
+	"shopperia/src/db"
 )
 
 func makeConnStr(usr, pwd, host, port, DBName string) string {
@@ -24,9 +24,9 @@ func ConnectPostgresDB() *sql.DB {
 
 	connStr := makeConnStr(usr, pwd, host, port, DBName)
 
-	database.ConnectToDatabase(connStr)
+	db.ConnectToDatabase(connStr)
 
-	db := database.PoodDB()
+	database := db.PooldDB()
 
-	return db
+	return database
 }

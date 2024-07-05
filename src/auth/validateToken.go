@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"github.com/golang-jwt/jwt"
 	"shopperia/src/common/models"
 )
@@ -13,6 +14,7 @@ func ValidateToken(tokenString string) (models.Claims, error) {
 	}
 
 	if !token.Valid {
+		fmt.Println("Fallo en auth")
 		return models.Claims{}, errors.New("invalid token")
 	}
 

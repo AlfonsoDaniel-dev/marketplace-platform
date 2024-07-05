@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	"database/sql"
@@ -7,24 +7,24 @@ import (
 )
 
 var (
-	db   *sql.DB
-	once sync.Once
+	database *sql.DB
+	once     sync.Once
 )
 
 func ConnectToDatabase(connStr string) {
 	once.Do(func() {
 		var err error
-		db, err = sql.Open("postgres", connStr)
+		database, err = sql.Open("postgres", connStr)
 		if err != nil {
 			panic(err)
 		}
 
-		if err := db.Ping(); err != nil {
+		if err := database.Ping(); err != nil {
 			panic(err)
 		}
 	})
 }
 
-func PoodDB() *sql.DB {
-	return db
+func PooldDB() *sql.DB {
+	return database
 }

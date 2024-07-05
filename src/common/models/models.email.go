@@ -28,3 +28,13 @@ type WelcomeEmail struct {
 	Title       string
 	WelcomeText string
 }
+
+type PasswordChangeEmail struct {
+	UserName         string
+	ConfirmationLink string
+}
+
+type TsvChangeEmail struct {
+	UserName string
+	Link     string
+}

@@ -15,7 +15,9 @@ func ValidateToken(f echo.HandlerFunc) echo.HandlerFunc {
 
 		_, err := auth.ValidateToken(tokenString)
 		if err != nil {
-			return c.JSON(http.StatusForbidden, map[string]string{"error": "Not authorized to access this resource"})
+			if err := c.Redirect(http.StatusUnauthorized, "/api/v1/user/login"); err != nil {
+				return c.JSON(http.StatusUnauthorized, map[string]string{"error": err.Error()})
+			}
 		}
 
 		return f(c)

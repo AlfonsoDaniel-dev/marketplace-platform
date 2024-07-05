@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	userModel "shopperia/src/common/models"
 	UserDTO "shopperia/src/core/user/domain/DTO"
+	"strings"
 	"time"
 )
 
@@ -14,7 +15,9 @@ func (S *Service) Register(register UserDTO.RegisterDTO) error {
 		return errors.New("please provide valid fields")
 	}
 
-	AccountCreatedAt := time.Now()
+	register.UserName = strings.ReplaceAll(register.UserName, " ", "_")
+
+	AccountCreatedAt := time.Now().Unix()
 	UserId := uuid.New()
 
 	user := userModel.User{
@@ -31,7 +34,7 @@ func (S *Service) Register(register UserDTO.RegisterDTO) error {
 		OrderedProducts: nil,
 		Orders:          nil,
 		CreatedAt:       AccountCreatedAt,
-		UpdatedAt:       time.Time{},
+		UpdatedAt:       0,
 	}
 
 	fmt.Println(user.Biography)
@@ -41,13 +44,13 @@ func (S *Service) Register(register UserDTO.RegisterDTO) error {
 		errString := fmt.Sprintf("rror while registering user: %v", err)
 		return errors.New(errString)
 	}
-	/*
-		err = S.UseCase.WelcomeEmail(user.FirstName, user.LastName, user.Email)
-		if err != nil {
-			fmt.Println(err)
-			errStr := fmt.Sprintf("failed to send welcome email but register was success: %v", err)
-			return errors.New(errStr)
-		} */
+
+	err = S.UseCase.WelcomeEmail(user.FirstName, user.LastName, user.Email)
+	if err != nil {
+		fmt.Println(err)
+		errStr := fmt.Sprintf("failed to send welcome email but register was success: %v", err)
+		return errors.New(errStr)
+	}
 
 	return nil
 }

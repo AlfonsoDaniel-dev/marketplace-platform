@@ -1,7 +1,6 @@
 package email
 
 import (
-	"fmt"
 	"log"
 	"net/smtp"
 	"shopperia/src/common/models"
@@ -36,7 +35,6 @@ func (sender *EmailSender) GetFrom() (string, string) {
 
 func (sender *EmailSender) configClient(client *smtp.Client, from, to string) error {
 	err := client.Mail(from)
-	fmt.Println(from)
 	if err != nil {
 		return err
 	}
