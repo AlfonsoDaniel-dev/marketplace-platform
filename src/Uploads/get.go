@@ -33,7 +33,13 @@ func (US *UploadService) GetMultipleMediaResources(repositoryPath string, filena
 		return nil, errors.New("no path to search")
 	}
 
-	var images []models.GetImage = make([]models.GetImage, len(filenames))
+	for _, filename := range filenames {
+		if filename.FileName == "" || filename.FileExtension == "" {
+			return nil, errors.New("no file name or file extension provided")
+		}
+	}
+
+	images := make([]models.GetImage, len(filenames))
 	for _, filename := range filenames {
 
 		img, err := US.GetMedia(repositoryPath, filename.FileName, filename.FileExtension)
