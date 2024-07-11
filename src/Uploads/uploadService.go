@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"shopperia/src/common/models"
+	"strings"
 )
 
 type UploadService struct {
@@ -29,7 +30,9 @@ func (US *UploadService) createFile(AbsoluteFilePath string) (*os.File, error) {
 func (US *UploadService) upload(repositoryPath, fileName, fileExtension string, image bytes.Buffer, userId uuid.UUID) (models.ImageData, error) {
 	imageId := uuid.New()
 
-	name := imageId.String() + "_" + fileName + fileExtension
+	fileName = strings.ReplaceAll(fileName, " ", "_")
+
+	name := imageId.String() + "_" + fileName + "." + fileExtension
 
 	dest := filepath.Join(US.OriginPath, repositoryPath, name)
 
@@ -53,6 +56,7 @@ func (US *UploadService) upload(repositoryPath, fileName, fileExtension string, 
 		Image_id:            imageId,
 		UserMediaRepository: repositoryPath,
 		FileName:            fileName,
+		FileExtension:       fileExtension,
 		ImagePath:           dest,
 	}
 

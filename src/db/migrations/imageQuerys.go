@@ -43,3 +43,22 @@ const sqlMigrateImagesTable = `CREATE TABLE IF NOT EXISTS images(
     ON UPDATE CASCADE
     ON DELETE RESTRICT
 )`
+
+const sqlMigrateProfilePicturesTable = `CREATE TABLE IF NOT EXISTS profile_pictures(
+    id UUID NOT NULL DEFAULT uuid_generate_v4(),
+    user_id uuid NOT NULL,
+    user_repository_path VARCHAR(80) NOT NULL,
+    file_name VARCHAR(100) NOT NULL,
+    file_extension VARCHAR(8) NOT NULL,
+    file_path VARCHAR(150) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP,
+        
+    CONSTRAINT profile_pictures_id_pk PRIMARY KEY (id),
+    CONSTRAINT profile_pictures_file_name_ck CHECK (file_name != ''),
+    CONSTRAINT profile_pictures_file_path_ck CHECK (file_path != ''),
+    CONSTRAINT profile_pictures_user_id_fk FOREIGN KEY (user_id)
+    REFERENCES users (id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT    
+)`

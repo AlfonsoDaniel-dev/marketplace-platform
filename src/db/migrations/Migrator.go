@@ -7,7 +7,7 @@ import (
 	"shopperia/src/db"
 )
 
-var querys = []string{sqlMigrateUuidExtension, sqlMigrateUserTable, sqlMigrateUserAddressesTable, sqlMigrateCollectionsTable, sqlMigrateImagesTable}
+var querys = []string{sqlMigrateUuidExtension, sqlMigrateUserTable, sqlMigrateUserAddressesTable, sqlMigrateCollectionsTable, sqlMigrateImagesTable, sqlMigrateProfilePicturesTable}
 
 var specialQuerys = []string{sqlAddConstraintForUserWithAddress}
 

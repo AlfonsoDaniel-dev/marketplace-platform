@@ -9,6 +9,7 @@ import (
 	User_email "shopperia/src/core/user/infrastructure/Email"
 	userHandlers "shopperia/src/core/user/infrastructure/controllers/handlers"
 	Userstorage "shopperia/src/core/user/infrastructure/storage"
+	userUploads "shopperia/src/core/user/infrastructure/uploads"
 )
 
 type Handler interface {
@@ -31,7 +32,8 @@ type UserController struct {
 func NewController(e *echo.Echo, db *sql.DB, accountEmail, accountName, password, host, serverName string) *UserController {
 	psqlUser := Userstorage.NewPsqlUser(db)
 	emailSender := User_email.NewEmailSender(accountEmail, accountName, password, host, serverName)
-	UserDomain := userDomain.NewUserDomain(psqlUser, emailSender)
+	uploadsClient := userUploads.NewUploadsClient()
+	UserDomain := userDomain.NewUserDomain(psqlUser, emailSender, uploadsClient)
 	Services := UserServices.NewService(UserDomain)
 
 	handler := userHandlers.NewHandler(Services)

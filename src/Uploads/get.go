@@ -3,6 +3,7 @@ package Uploads
 import (
 	"bytes"
 	"errors"
+	"github.com/google/uuid"
 	"os"
 	"shopperia/src/common/models"
 )
@@ -58,6 +59,21 @@ func (US *UploadService) GetMultipleMediaResources(repositoryPath string, filena
 	}
 
 	return images, nil
+}
+
+func (US *UploadService) GetProfileImage(UserRepository, fileName, fileExtension string, userId uuid.UUID) (bytes.Buffer, error) {
+	if UserRepository == "" || userId == uuid.Nil {
+		return bytes.Buffer{}, errors.New("User Repository or User Id is required")
+	}
+
+	parsedFileName := userId.String() + "_" + fileName + "_" + "profilePic"
+
+	img, err := US.GetMedia(UserRepository, parsedFileName, fileExtension)
+	if err != nil {
+		return bytes.Buffer{}, err
+	}
+
+	return img, nil
 }
 
 /*

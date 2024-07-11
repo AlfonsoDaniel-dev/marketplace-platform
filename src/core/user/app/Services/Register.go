@@ -16,6 +16,7 @@ func (S *Service) Register(register UserDTO.RegisterDTO) error {
 	}
 
 	register.UserName = strings.ReplaceAll(register.UserName, " ", "_")
+	register.Email = strings.ReplaceAll(register.Email, " ", "_")
 
 	AccountCreatedAt := time.Now().Unix()
 	UserId := uuid.New()

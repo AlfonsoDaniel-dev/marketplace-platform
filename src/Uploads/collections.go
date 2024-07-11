@@ -55,7 +55,7 @@ func (US *UploadService) InsertMultipleMediaIntoCollection(collectionPath models
 		}
 	}
 
-	imagesData, err := US.SaveMultipleMediaResources(images)
+	imagesData, err := US.UploadMultipleMediaResourcesOnRepository(collectionPath.CollectionPath, images)
 	if err != nil {
 		return []models.ImageData{}, err
 	}

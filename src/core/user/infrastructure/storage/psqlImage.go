@@ -27,6 +27,25 @@ func (p *psqlUser) PsqlInsertRepositoryPathOnUser(userId uuid.UUID, repositoryPa
 	return nil
 }
 
+func (p *psqlUser) PsqlGetUserRepositoryPath(userId uuid.UUID) (string, error) {
+	tx, err := p.DB.Begin()
+	if err != nil {
+		return "", err
+	}
+
+	res, err := db.RunQuery(tx, sqlGetUserRepositoryPath, userId)
+	if err != nil {
+		return "", err
+	}
+
+	path, err := db.ParseAnyToString(res[0])
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
+}
+
 func (p *psqlUser) PsqlInsertImageData(imageID, userId uuid.UUID, userRepositoryPath, fileName, fileExtension, filePath string) error {
 	tx, err := p.DB.Begin()
 	if err != nil {

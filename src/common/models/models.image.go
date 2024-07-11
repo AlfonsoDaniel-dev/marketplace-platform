@@ -14,12 +14,12 @@ type Image struct {
 }
 
 type UploadImageForm struct {
-	UserID             uuid.UUID
-	UserEmail          string
-	FileName           string
-	FileExtension      string
-	ImageData          bytes.Buffer
-	UserRepositoryPath string
+	ImageID       uuid.UUID
+	UserID        uuid.UUID
+	UserEmail     string
+	FileName      string
+	FileExtension string
+	ImageData     bytes.Buffer
 }
 
 type ImageData struct {
@@ -27,6 +27,7 @@ type ImageData struct {
 	Image_id            uuid.UUID
 	UserMediaRepository string
 	FileName            string
+	FileExtension       string
 	ImagePath           string
 }
 
@@ -66,9 +67,4 @@ type CollectionData struct {
 	CollectionName string
 	UserRepository string
 	CollectionPath string
-}
-
-type GetImageData struct {
-	FilePath string
-	Data     bytes.Buffer
 }
