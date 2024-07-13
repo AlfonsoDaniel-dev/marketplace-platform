@@ -6,4 +6,4 @@ const sqlInsertRepositoryPathOnUser = `UPDATE users SET media_repository_path = 
 
 const sqlGetUserRepositoryPath = `SELECT media_repository_path FROM users WHERE id = $1`
 
-const sqlGetUserProfilePictureData = `SELECT id, file_name, file_extension, user_repository_path FROM images WHERE id = (SELECT id FROM users WHERE email = $1)`
+const sqlGetUserProfilePictureData = `SELECT user_id, id, file_name, file_extension, user_repository_path FROM profile_pictures WHERE id = (SELECT id FROM users WHERE email = $1)`

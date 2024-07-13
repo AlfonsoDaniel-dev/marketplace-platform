@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"shopperia/src/common/models"
 	"shopperia/src/db"
 	"time"
 )
@@ -64,4 +65,31 @@ func (p *psqlUser) PsqlInsertImageData(imageID, userId uuid.UUID, userRepository
 	}
 
 	return nil
+}
+
+func (p *psqlUser) PsqlGetUserProfilePictureData(email string) (models.ImageData, error) {
+	tx, err := p.DB.Begin()
+	if err != nil {
+		return models.ImageData{}, err
+	}
+
+	res, err := db.RunQuery(tx, sqlGetUserProfilePictureData, email)
+	if err != nil {
+		return models.ImageData{}, err
+	}
+
+	data := models.ImageData{}
+
+	err = db.MapStructValues(res, &data)
+	if err != nil {
+		fmt.Println(err)
+		return models.ImageData{}, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		errStr := fmt.Sprintf("Failed to commit transaction. Error: %v", err)
+		return models.ImageData{}, errors.New(errStr)
+	}
+
+	return data, nil
 }

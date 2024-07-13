@@ -5,15 +5,33 @@ import (
 	"shopperia/src/common/models"
 )
 
-/*
-func (u *UserDomain) GetProfilePic(email string) (models.GetImage, error) {
+func (u *UserDomain) GetProfilePicture(email string) (models.GetImage, error) {
 	if email == "" {
-		return errors.New("no email provide")
+		return models.GetImage{}, errors.New("no email provide")
 	}
 
-	u.UploadsInterface.
+	ProfilePicData, err := u.OutputInterface.PsqlGetUserProfilePictureData(email)
+	if err != nil {
+		return models.GetImage{}, err
+	}
 
-} */
+	form := models.GetImageForm{
+		FileName:      ProfilePicData.FileName,
+		FileExtension: ProfilePicData.FileExtension,
+	}
+
+	image, err := u.UploadsInterface.GetMedia(ProfilePicData.UserMediaRepository, form)
+	if err != nil {
+		return models.GetImage{}, err
+	}
+
+	Data := models.GetImage{
+		FileName:    ProfilePicData.FileName + "." + ProfilePicData.FileExtension,
+		ImageBuffer: image,
+	}
+
+	return Data, nil
+}
 
 func (u *UserDomain) UploadNewImage(imageform models.UploadImageForm) error {
 	if imageform.FileName == "" || imageform.FileExtension == "" || imageform.UserEmail == "" {

@@ -25,6 +25,7 @@ type OutputInterface interface {
 	PsqlInsertRepositoryPathOnUser(userId uuid.UUID, repositoryPath string) error
 	PsqlGetUserRepositoryPath(userId uuid.UUID) (string, error)
 	PsqlInsertImageData(imageID, userId uuid.UUID, userRepositoryPath, filename, fileextension, filepath string) error
+	PsqlGetUserProfilePictureData(email string) (models.ImageData, error)
 
 	// Update
 	PsqlChangeUserName(newUserNAme, email string) error
