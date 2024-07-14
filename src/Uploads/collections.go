@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"shopperia/src/common/models"
+	UserDTO "shopperia/src/core/user/domain/DTO"
 )
 
 func (US *UploadService) makeNewCollection(userRepositoryPath, collectionName string) (string, error) {
@@ -19,7 +20,7 @@ func (US *UploadService) makeNewCollection(userRepositoryPath, collectionName st
 	return collectionPath, nil
 }
 
-func (US *UploadService) CreateCollection(form models.CreateCollectionForm) (models.CollectionData, error) {
+func (US *UploadService) CreateCollection(form UserDTO.CreateCollectionForm) (models.CollectionData, error) {
 	if form.UserRepositoryPath == "" || form.CollectionName == "" {
 		errStr := fmt.Sprint("Please provide all fields")
 		return models.CollectionData{}, errors.New(errStr)

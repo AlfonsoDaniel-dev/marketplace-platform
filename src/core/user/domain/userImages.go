@@ -2,7 +2,10 @@ package user_domain
 
 import (
 	"errors"
+	"fmt"
+	"github.com/google/uuid"
 	"shopperia/src/common/models"
+	UserDTO "shopperia/src/core/user/domain/DTO"
 )
 
 func (u *UserDomain) GetProfilePicture(email string) (models.GetImage, error) {
@@ -15,22 +18,52 @@ func (u *UserDomain) GetProfilePicture(email string) (models.GetImage, error) {
 		return models.GetImage{}, err
 	}
 
-	form := models.GetImageForm{
-		FileName:      ProfilePicData.FileName,
-		FileExtension: ProfilePicData.FileExtension,
-	}
-
-	image, err := u.UploadsInterface.GetMedia(ProfilePicData.UserMediaRepository, form)
+	image, err := u.UploadsInterface.GetProfilePicture(ProfilePicData.UserMediaRepository, ProfilePicData.FileName, ProfilePicData.FileExtension, ProfilePicData.UserId)
 	if err != nil {
+		fmt.Println(err)
 		return models.GetImage{}, err
 	}
 
-	Data := models.GetImage{
-		FileName:    ProfilePicData.FileName + "." + ProfilePicData.FileExtension,
-		ImageBuffer: image,
+	return image, nil
+}
+
+func (u *UserDomain) CreateCollection(form UserDTO.CreateCollection) error {
+	if form.Email == "" || form.CollectionName == "" {
+		return errors.New("no collection name")
 	}
 
-	return Data, nil
+	userId, err := u.OutputInterface.PsqlGetUserIdByEmail(form.Email)
+	if err != nil {
+		return err
+	}
+
+	userName, err := u.OutputInterface.PsqlGetUserNameByEmail(form.Email)
+	if err != nil {
+		return err
+	}
+
+	repositoryPath, err := u.OutputInterface.PsqlGetUserRepositoryPath(userId)
+	if err != nil {
+		return err
+	}
+
+	collectionData, err := u.UploadsInterface.CreateCollection(userId, form.CollectionName, repositoryPath)
+
+	collectionForm := UserDTO.DbCreateCollection{
+		Id:                 uuid.New(),
+		UserId:             userId,
+		UserName:           userName,
+		CollectionName:     form.CollectionName,
+		Description:        form.Description,
+		UserRepositoryPath: repositoryPath,
+	}
+
+	err = u.OutputInterface.PsqlCreateCollection(collectionData.CollectionPath, collectionForm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *UserDomain) UploadNewImage(imageform models.UploadImageForm) error {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/google/uuid"
 	models "shopperia/src/common/models"
+	UserDTO "shopperia/src/core/user/domain/DTO"
 )
 
 type OutputInterface interface {
@@ -26,6 +27,7 @@ type OutputInterface interface {
 	PsqlGetUserRepositoryPath(userId uuid.UUID) (string, error)
 	PsqlInsertImageData(imageID, userId uuid.UUID, userRepositoryPath, filename, fileextension, filepath string) error
 	PsqlGetUserProfilePictureData(email string) (models.ImageData, error)
+	PsqlCreateCollection(CollectionPath string, form UserDTO.DbCreateCollection) error
 
 	// Update
 	PsqlChangeUserName(newUserNAme, email string) error
@@ -45,5 +47,7 @@ type EmailInterface interface {
 
 type UploadsInterface interface {
 	UploadMedia(userRepository string, image models.UploadImageForm) (models.ImageData, error)
+	CreateCollection(userId uuid.UUID, collectionName, repositoryPath string) (models.CollectionData, error)
 	GetMedia(repositoryPath string, form models.GetImageForm) (bytes.Buffer, error)
+	GetProfilePicture(repositoryPath, fileName, fileExtension string, userId uuid.UUID) (models.GetImage, error)
 }

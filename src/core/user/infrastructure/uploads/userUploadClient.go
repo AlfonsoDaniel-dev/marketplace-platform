@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"shopperia/src/Uploads"
 	"shopperia/src/common/models"
+	UserDTO "shopperia/src/core/user/domain/DTO"
 )
 
 type uploadClient interface {
@@ -16,11 +17,14 @@ type uploadClient interface {
 	CheckUserHasAMediaRepository(userId uuid.UUID) bool
 	GetUserRepositoryPath(userId uuid.UUID) (string, error)
 
+	CreateCollection(form UserDTO.CreateCollectionForm) (models.CollectionData, error)
+
 	UploadMedia(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
 	UploadProfileImage(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
 	UploadMultipleMediaResourcesOnRepository(repositoryPath string, images []models.UploadImageForm) ([]models.ImageData, error)
 
 	GetMedia(repositoryPath, fileName, fileExtension string) (bytes.Buffer, error)
+	GetProfileImage(repositoryPath, fileName, fileExtension string, userId uuid.UUID) (bytes.Buffer, error)
 }
 
 var userPath string = "./src/core/user/infrastructure/uploads/main/repository"
@@ -85,6 +89,8 @@ func (C *uploadsClient) UploadMedia(userRepository string, image models.UploadIm
 
 		imageDataChan <- imageData
 		errchan <- nil
+
+		return
 	}()
 
 	err := <-errchan
@@ -105,6 +111,7 @@ func (C *uploadsClient) GetMedia(repositoryPath string, form models.GetImageForm
 
 	datachan := make(chan bytes.Buffer)
 	errchan := make(chan error)
+
 	go func() {
 		imageData, err := C.uploadClient.GetMedia(repositoryPath, form.FileName, form.FileExtension)
 		if err != nil {
@@ -115,6 +122,8 @@ func (C *uploadsClient) GetMedia(repositoryPath string, form models.GetImageForm
 
 		datachan <- imageData
 		errchan <- nil
+
+		return
 	}()
 
 	err := <-errchan
@@ -125,4 +134,115 @@ func (C *uploadsClient) GetMedia(repositoryPath string, form models.GetImageForm
 	}
 
 	return data, nil
+}
+
+func (C *uploadsClient) GetProfilePicture(repositoryPath, fileName, fileExtension string, userId uuid.UUID) (models.GetImage, error) {
+
+	if userId == uuid.Nil || repositoryPath == "" || fileName == "" || fileExtension == "" {
+		return models.GetImage{}, errors.New("no parameters provide")
+	}
+
+	dataChan := make(chan models.GetImage)
+	errchan := make(chan error)
+
+	go func() {
+
+		img, err := C.uploadClient.GetProfileImage(repositoryPath, fileName, fileExtension, userId)
+		if err != nil {
+			errchan <- err
+			dataChan <- models.GetImage{}
+			return
+		}
+
+		imageData := models.GetImage{
+			FileName:    fileName + "." + fileExtension,
+			ImageBuffer: img,
+		}
+
+		errchan <- nil
+		dataChan <- imageData
+
+		return
+	}()
+
+	err := <-errchan
+	if err != nil {
+		return models.GetImage{}, nil
+	}
+
+	imageData := <-dataChan
+
+	return imageData, nil
+}
+
+func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repositoryPath string) (models.CollectionData, error) {
+	if collectionName == "" || userId == uuid.Nil {
+		return models.CollectionData{}, errors.New("no collection name provide")
+	}
+
+	collectionDataChan := make(chan models.CollectionData)
+	errChan := make(chan error)
+
+	go func() {
+
+		var err error
+		if repositoryPath == "" {
+
+			exists := C.uploadClient.CheckUserHasAMediaRepository(userId)
+
+			if !exists {
+
+				repositoryData, err := C.uploadClient.MakeNewMediaRepositoryForUser(userId)
+				if err != nil {
+					errChan <- err
+					return
+				}
+
+				form := UserDTO.CreateCollectionForm{
+					CollectionName:     collectionName,
+					UserRepositoryPath: repositoryData,
+				}
+
+				collectionData, err := C.uploadClient.CreateCollection(form)
+				if err != nil {
+					errChan <- err
+					return
+				}
+
+				collectionDataChan <- collectionData
+				return
+			}
+
+			repositoryPath, err = C.GetUserRepositoryPath(userId)
+			if err != nil {
+				errChan <- err
+				return
+			}
+
+		}
+
+		form := UserDTO.CreateCollectionForm{
+			CollectionName:     collectionName,
+			UserRepositoryPath: repositoryPath,
+		}
+
+		collectionData, err := C.uploadClient.CreateCollection(form)
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		collectionDataChan <- collectionData
+
+		return
+	}()
+
+	err := <-errChan
+	if err != nil {
+		return models.CollectionData{}, err
+	}
+
+	collectionData := <-collectionDataChan
+
+	return collectionData, nil
 }

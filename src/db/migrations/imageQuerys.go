@@ -8,6 +8,7 @@ const sqlMigrateCollectionsTable = `CREATE TABLE IF NOT EXISTS collections(
     collection_description VARCHAR(140),
     
     collection_path VARCHAR(250) NOT NULL,
+    user_repository_path VARCHAR(250) NOT NULL,
     
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP,

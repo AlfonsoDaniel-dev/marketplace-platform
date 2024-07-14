@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"shopperia/src/common/models"
+	UserDTO "shopperia/src/core/user/domain/DTO"
 	"shopperia/src/db"
 	"time"
 )
@@ -91,5 +92,26 @@ func (p *psqlUser) PsqlGetUserProfilePictureData(email string) (models.ImageData
 		return models.ImageData{}, errors.New(errStr)
 	}
 
+	if err := tx.Commit(); err != nil {
+		tx.Rollback()
+		errStr := fmt.Sprintf("Failed to commit transaction. Error: %v", err)
+		return models.ImageData{}, errors.New(errStr)
+	}
+
 	return data, nil
+}
+
+func (p *psqlUser) PsqlCreateCollection(path string, form UserDTO.DbCreateCollection) error {
+	tx, err := p.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	now := time.Now().Unix()
+	_, err = db.ExecQuery(tx, sqlInsertCollectionData, form.Id, form.UserId, form.CollectionName, form.Description, path, now)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

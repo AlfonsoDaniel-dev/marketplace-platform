@@ -44,17 +44,14 @@ type GetImage struct {
 type Collection struct {
 	ID             uuid.UUID `json:"id"`
 	UserId         uuid.UUID `json:"user_id"`
-	CollectionName string    `json:"collection_name"`
+	UserName       string    `json:"user_name"`
+	UserEmail      string    `json:"user_email"`
+	Name           string    `json:"collection_name"`
 	Cover          Image     `json:"cover_photo"`
 	Description    string    `json:"description"`
+	UserRepository string    `json:"user_repository"`
 	Path           string    `json:"path"`
 	Content        []Image   `json:"content"`
-}
-
-type CreateCollectionForm struct {
-	UserID             uuid.UUID `json:"user_id"`
-	CollectionName     string    `json:"collection_name"`
-	UserRepositoryPath string    `json:"user_repository_path"`
 }
 
 type CollectionPath struct {
