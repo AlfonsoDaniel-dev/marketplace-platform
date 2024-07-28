@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"shopperia/src/db"
+	"shopperia/src/External/db"
 )
 
 var querys = []string{sqlMigrateUuidExtension, sqlMigrateUserTable, sqlMigrateUserAddressesTable, sqlMigrateCollectionsTable, sqlMigrateImagesTable, sqlMigrateProfilePicturesTable}

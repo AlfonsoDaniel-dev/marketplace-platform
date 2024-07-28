@@ -37,8 +37,9 @@ type GetImageForm struct {
 }
 
 type GetImage struct {
-	FileName    string
-	ImageBuffer bytes.Buffer
+	FileName      string
+	FileExtension string
+	ImageBuffer   bytes.Buffer
 }
 
 type Collection struct {

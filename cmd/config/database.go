@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"shopperia/src/db"
+	"shopperia/src/External/db"
 )
 
 func makeConnStr(usr, pwd, host, port, DBName string) string {

@@ -18,7 +18,7 @@ func NewHttp(db *sql.DB) *echo.Echo {
 
 	API.BuildAPI(e, db, account, name, password, host, serverName)
 
-	// e.Use(middleware.Recover())
+	e.Use(middleware.Recover())
 
 	e.Use(commonMiddlewares.Logger)
 

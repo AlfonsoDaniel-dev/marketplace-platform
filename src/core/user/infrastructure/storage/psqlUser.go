@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"github.com/google/uuid"
 	"log"
+	"shopperia/src/External/db"
 	user_model "shopperia/src/common/models"
 	"shopperia/src/core/helpers"
-	"shopperia/src/db"
 	"time"
 )
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"shopperia/src/Uploads"
+	"shopperia/src/External/Uploads"
 	"shopperia/src/common/models"
 	UserDTO "shopperia/src/core/user/domain/DTO"
 )
@@ -183,7 +183,7 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 	collectionDataChan := make(chan models.CollectionData)
 	errChan := make(chan error)
 
-	go func() {
+	go func(channel chan<- models.CollectionData, errorChan chan<- error) {
 
 		var err error
 		if repositoryPath == "" {
@@ -209,7 +209,7 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 					return
 				}
 
-				collectionDataChan <- collectionData
+				channel <- collectionData
 				return
 			}
 
@@ -232,10 +232,10 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 			return
 		}
 
-		collectionDataChan <- collectionData
+		channel <- collectionData
 
 		return
-	}()
+	}(collectionDataChan, errChan)
 
 	err := <-errChan
 	if err != nil {

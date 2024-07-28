@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 	"shopperia/cmd/config"
+	"shopperia/src/External/db/migrations"
 	"shopperia/src/auth"
-	"shopperia/src/db/migrations"
 )
 
 func main() {

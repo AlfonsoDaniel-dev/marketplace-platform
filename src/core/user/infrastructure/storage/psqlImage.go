@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	db2 "shopperia/src/External/db"
 	"shopperia/src/common/models"
 	UserDTO "shopperia/src/core/user/domain/DTO"
-	"shopperia/src/db"
 	"time"
 )
 
@@ -16,7 +16,7 @@ func (p *psqlUser) PsqlInsertRepositoryPathOnUser(userId uuid.UUID, repositoryPa
 		return err
 	}
 
-	_, err = db.ExecQuery(tx, sqlInsertRepositoryPathOnUser, repositoryPath, userId)
+	_, err = db2.ExecQuery(tx, sqlInsertRepositoryPathOnUser, repositoryPath, userId)
 	if err != nil {
 		return err
 	}
@@ -35,12 +35,12 @@ func (p *psqlUser) PsqlGetUserRepositoryPath(userId uuid.UUID) (string, error) {
 		return "", err
 	}
 
-	res, err := db.RunQuery(tx, sqlGetUserRepositoryPath, userId)
+	res, err := db2.RunQuery(tx, sqlGetUserRepositoryPath, userId)
 	if err != nil {
 		return "", err
 	}
 
-	path, err := db.ParseAnyToString(res[0])
+	path, err := db2.ParseAnyToString(res[0])
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +55,7 @@ func (p *psqlUser) PsqlInsertImageData(imageID, userId uuid.UUID, userRepository
 	}
 
 	createdAt := time.Now().Unix()
-	_, err = db.ExecQuery(tx, sqlInsertImageData, imageID, userId, userRepositoryPath, fileName, fileExtension, filePath, createdAt)
+	_, err = db2.ExecQuery(tx, sqlInsertImageData, imageID, userId, userRepositoryPath, fileName, fileExtension, filePath, createdAt)
 	if err != nil {
 		return err
 	}
@@ -74,14 +74,14 @@ func (p *psqlUser) PsqlGetUserProfilePictureData(email string) (models.ImageData
 		return models.ImageData{}, err
 	}
 
-	res, err := db.RunQuery(tx, sqlGetUserProfilePictureData, email)
+	res, err := db2.RunQuery(tx, sqlGetUserProfilePictureData, email)
 	if err != nil {
 		return models.ImageData{}, err
 	}
 
 	data := models.ImageData{}
 
-	err = db.MapStructValues(res, &data)
+	err = db2.MapStructValues(res, &data)
 	if err != nil {
 		fmt.Println(err)
 		return models.ImageData{}, err
@@ -108,7 +108,7 @@ func (p *psqlUser) PsqlCreateCollection(path string, form UserDTO.DbCreateCollec
 	}
 
 	now := time.Now().Unix()
-	_, err = db.ExecQuery(tx, sqlInsertCollectionData, form.Id, form.UserId, form.CollectionName, form.Description, path, now)
+	_, err = db2.ExecQuery(tx, sqlInsertCollectionData, form.Id, form.UserId, form.CollectionName, form.Description, path, now)
 	if err != nil {
 		return err
 	}

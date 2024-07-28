@@ -1,8 +1,8 @@
 package User_email
 
 import (
+	"shopperia/src/External/email"
 	"shopperia/src/common/models"
-	"shopperia/src/email"
 )
 
 type Email interface {

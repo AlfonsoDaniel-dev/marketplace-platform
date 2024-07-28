@@ -2,7 +2,7 @@ package Userstorage
 
 import (
 	"fmt"
-	"shopperia/src/db"
+	"shopperia/src/External/db"
 )
 
 func (p *psqlUser) PsqlGetHashPassword(email string) ([]byte, error) {
