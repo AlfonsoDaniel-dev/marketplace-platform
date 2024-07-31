@@ -8,6 +8,7 @@ import (
 	"shopperia/src/External/Uploads"
 	"shopperia/src/common/models"
 	UserDTO "shopperia/src/core/user/domain/DTO"
+	"sync"
 )
 
 type uploadClient interface {
@@ -18,6 +19,12 @@ type uploadClient interface {
 	GetUserRepositoryPath(userId uuid.UUID) (string, error)
 
 	CreateCollection(form UserDTO.CreateCollectionForm) (models.CollectionData, error)
+	InsertImageOnCollection(repositoryPath, CollectionPath string, image models.UploadImageForm) (models.ImageData, error)
+	InsertMultipleImagesOnCollection(repositoryPath, collectionPath string, forms []models.UploadImageForm) ([]models.ImageData, error)
+	GetAllMediaFromCollection(repositoryPath, collectionPath string, forms []models.GetImageForm) ([]models.GetImage, error)
+	UpdateImageOnCollection(request models.UpdateImageOnCollection, form models.UploadImageForm) (models.ImageData, error)
+	DeleteImageOnCollection(request models.DeleteOnCollectionRequest) error
+	DeleteMultipleImagesOnCollection(requests []models.DeleteOnCollectionRequest) error
 
 	UploadMedia(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
 	UploadProfileImage(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
@@ -136,6 +143,50 @@ func (C *uploadsClient) GetMedia(repositoryPath string, form models.GetImageForm
 	return data, nil
 }
 
+func (C *uploadsClient) UploadProfilePicture(repositoryPath string, form models.UploadImageForm) (models.ImageData, error) {
+	if form.FileName == "" || form.FileExtension == "" {
+		return models.ImageData{}, errors.New("no file name provided")
+	} else if repositoryPath == "" {
+		var ok bool
+		var err error
+
+		wg := sync.WaitGroup{}
+
+		wg.Add(1)
+
+		go func(w *sync.WaitGroup) {
+
+			ok = C.uploadClient.CheckUserHasAMediaRepository(form.UserID)
+
+			w.Done()
+
+		}(&wg)
+
+		wg.Wait()
+
+		if !ok {
+			repositoryPath, err = C.uploadClient.MakeNewMediaRepositoryForUser(form.UserID)
+			if err != nil {
+				return models.ImageData{}, err
+			}
+		}
+
+		data, err := C.uploadClient.UploadProfileImage(repositoryPath, form)
+		if err != nil {
+			return models.ImageData{}, err
+		}
+
+		return data, nil
+	}
+
+	data, err := C.uploadClient.UploadProfileImage(repositoryPath, form)
+	if err != nil {
+		return models.ImageData{}, err
+	}
+
+	return data, nil
+}
+
 func (C *uploadsClient) GetProfilePicture(repositoryPath, fileName, fileExtension string, userId uuid.UUID) (models.GetImage, error) {
 
 	if userId == uuid.Nil || repositoryPath == "" || fileName == "" || fileExtension == "" {
@@ -245,4 +296,30 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 	collectionData := <-collectionDataChan
 
 	return collectionData, nil
+}
+
+func (C *uploadsClient) UploadImageIntoCollection(collectionName, UserRepository string, form models.UploadImageForm) (models.ImageData, error) {
+	if form.FileName == "" || form.FileExtension == "" || collectionName == "" || UserRepository == "" {
+		return models.ImageData{}, errors.New("no parameters provide")
+	}
+
+	Data, err := C.uploadClient.InsertImageOnCollection(UserRepository, collectionName, form)
+	if err != nil {
+		return models.ImageData{}, err
+	}
+
+	return Data, nil
+}
+
+func (C *uploadsClient) GetImagesOnCollection(userRepository, collectionName string, forms []models.GetImageForm) ([]models.GetImage, error) {
+	if userRepository == "" || len(forms) == 0 {
+		return nil, errors.New("no parameters provide")
+	}
+
+	Images, err := C.uploadClient.GetAllMediaFromCollection(userRepository, collectionName, forms)
+	if err != nil {
+		return nil, err
+	}
+
+	return Images, nil
 }

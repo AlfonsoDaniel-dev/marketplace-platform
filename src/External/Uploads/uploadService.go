@@ -14,6 +14,20 @@ type UploadService struct {
 	OriginPath string
 }
 
+type deleteRequest struct {
+	ResourcePath string
+	Status       error
+	Done         chan struct{}
+}
+
+type uploadImageSingleAttempt struct {
+	Data          models.ImageData
+	Image         models.UploadImageForm
+	DirectoryPath string
+	Status        error
+	Done          chan struct{}
+}
+
 func (US *UploadService) createFile(AbsoluteFilePath string) (*os.File, error) {
 	if AbsoluteFilePath == "" {
 		return &os.File{}, errors.New("name is empty")
@@ -63,6 +77,35 @@ func (US *UploadService) upload(repositoryPath, fileName, fileExtension string, 
 	return imageData, nil
 }
 
+func (US *UploadService) delete(RelativeResourcePath string) error {
+	if RelativeResourcePath == "" {
+		return errors.New("resource path is empty")
+	}
+
+	completePath := filepath.Join(US.OriginPath, RelativeResourcePath)
+
+	err := os.Remove(completePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (US *UploadService) deleteDirectory(relativeFatherPath, directoryName string) error {
+	if relativeFatherPath == "" || directoryName == "" {
+		return errors.New("resource path is empty")
+	}
+
+	resourcePath := filepath.Join(US.OriginPath, relativeFatherPath, directoryName)
+	err := os.RemoveAll(resourcePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (US *UploadService) MakeNewDirectory(fatherPathOpcional, NewDirName string) (string, error) {
 	if NewDirName != "" {
 		return "", errors.New("new directory name is empty")
@@ -83,6 +126,40 @@ func (US *UploadService) MakeNewDirectory(fatherPathOpcional, NewDirName string)
 	}
 
 	return path, nil
+}
+
+func (US *UploadService) uploadWorker(requestChan chan *uploadImageSingleAttempt) {
+	for {
+		select {
+		case request := <-requestChan:
+			imageData, err := US.upload(request.DirectoryPath, request.Image.FileName, request.Image.FileExtension, request.Image.ImageData, request.Image.UserID)
+			request.Data = imageData
+			request.Status = err
+
+			requestChan <- request
+			request.Done <- struct{}{}
+		}
+	}
+}
+
+func (US *UploadService) deleteWorker(numAttemps int, requestChan chan *deleteRequest) {
+
+	var i int
+	for {
+
+		if i == numAttemps {
+			return
+		}
+
+		select {
+		case req := <-requestChan:
+			err := US.delete(req.ResourcePath)
+			req.Status = err
+			req.Done <- struct{}{}
+			requestChan <- req
+			i++
+		}
+	}
 }
 
 func getEntryPoint() string {

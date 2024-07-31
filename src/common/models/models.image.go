@@ -66,3 +66,17 @@ type CollectionData struct {
 	UserRepository string
 	CollectionPath string
 }
+
+type UpdateImageOnCollection struct {
+	UserRepositoryPath string
+	CollectionName     string
+	FileName           string
+	FileExtension      string
+}
+
+type DeleteOnCollectionRequest struct {
+	UserRepositoryPath string
+	CollectionName     string
+	FileName           string
+	FileExtension      string
+}

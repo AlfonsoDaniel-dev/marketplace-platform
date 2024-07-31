@@ -23,12 +23,22 @@ func (US *UploadService) UploadProfileImage(repositoryPath string, image models.
 	image.FileName = strings.ReplaceAll(image.FileName, " ", "_")
 	image.FileName = image.UserID.String() + "_" + image.FileName + "_" + "profilePic"
 
-	imageData, err := US.upload(repositoryPath, image.FileName, image.FileExtension, image.ImageData, image.UserID)
-	if err != nil {
-		return models.ImageData{}, err
+	requestChan := make(chan *uploadImageSingleAttempt)
+
+	go US.uploadWorker(requestChan)
+
+	req := &uploadImageSingleAttempt{
+		DirectoryPath: repositoryPath,
+		Done:          make(chan struct{}),
 	}
 
-	return imageData, nil
+	<-req.Done
+
+	if req.Status != nil {
+		return models.ImageData{}, req.Status
+	}
+
+	return req.Data, nil
 }
 
 func (US *UploadService) UploadMultipleMediaResourcesOnRepository(repositorytPath string, images []models.UploadImageForm) ([]models.ImageData, error) {
