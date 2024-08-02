@@ -96,7 +96,7 @@ func (US *UploadService) uploadImage(attemptRequest uploadImageAttempt, resolveC
 		}
 	}
 
-	collectionPath := filepath.Join(US.OriginPath, attemptRequest.CollectionPath)
+	collectionPath := filepath.Join(attemptRequest.CollectionPath)
 	imageData, err := US.upload(collectionPath, attemptRequest.FileName, attemptRequest.FileExtension, attemptRequest.Image, attemptRequest.UserId)
 	resolve := resolveImageAttempt{
 		ImageData: imageData,
@@ -130,8 +130,8 @@ func (US *UploadService) reedResolvesChannel(numAttempts int, resolveChan <-chan
 	}
 }
 
-func (US *UploadService) InsertMultipleImagesOnCollection(repositoryPath, collectionPath string, forms []models.UploadImageForm) ([]models.ImageData, error) {
-	if repositoryPath == "" || collectionPath == "" || len(forms) == 0 {
+func (US *UploadService) InsertMultipleImagesOnCollection(collectionPath string, forms []models.UploadImageForm) ([]models.ImageData, error) {
+	if collectionPath == "" || len(forms) == 0 {
 		return nil, errors.New("No parameters provide")
 	}
 
@@ -148,7 +148,6 @@ func (US *UploadService) InsertMultipleImagesOnCollection(repositoryPath, collec
 
 		uploadAttempt := uploadImageAttempt{
 			UserId:         form.UserID,
-			RepositoryPath: repositoryPath,
 			CollectionPath: collectionPath,
 			FileName:       form.FileName,
 			FileExtension:  form.FileExtension,
@@ -324,8 +323,23 @@ func (US *UploadService) DeleteMultipleImagesOnCollection(requests []models.Dele
 	return nil
 }
 
-func (US *UploadService) UpdateImageOnCollection(request models.UpdateImageOnCollection, form models.UploadImageForm) (models.ImageData, error) {
-	if request.UserRepositoryPath == "" || request.CollectionName == "" || request.FileName == "" || request.FileExtension == "" {
+func (US *UploadService) CheckIfImageIsOnCollection(userRepository, collectionName, fileName, fileExtension string) bool {
+	if userRepository == "" || collectionName == "" || fileName == "" || fileExtension == "" {
+		return false
+	}
+
+	completeFileName := fileName + "." + fileExtension
+	path := filepath.Join(US.OriginPath, userRepository, collectionName, completeFileName)
+	_, err := os.Stat(path)
+	if !os.IsExist(err) {
+		return false
+	}
+
+	return true
+}
+
+func (US *UploadService) UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error) {
+	if collectionPath == "" || fileName == "" || fileExtension == "" {
 		return models.ImageData{}, errors.New("no parameters provide")
 	}
 
@@ -334,11 +348,10 @@ func (US *UploadService) UpdateImageOnCollection(request models.UpdateImageOnCol
 
 	go US.deleteWorker(1, deleteRequestChan)
 
-	completeFileName := request.FileName + "." + request.FileExtension
-	mediaPath := filepath.Join(US.OriginPath, request.UserRepositoryPath, request.CollectionName, completeFileName)
+	completeImagePath := collectionPath + "/" + fileName + "." + fileExtension
 
 	deleteReq := &deleteRequest{
-		ResourcePath: mediaPath,
+		ResourcePath: completeImagePath,
 		Done:         make(chan struct{}),
 	}
 
@@ -367,4 +380,147 @@ func (US *UploadService) UpdateImageOnCollection(request models.UpdateImageOnCol
 
 	return updateAttempt.Data, nil
 
+}
+
+func (US *UploadService) DeleteCollection(userRepository, collectionName string) error {
+	return nil
+}
+
+func (US *UploadService) updateCollectionWorker(numAttempts int, attempt chan *attemptchangeCollectionName) {
+	i := 0
+	for {
+		if i == numAttempts {
+			break
+		}
+		select {
+		case req := <-attempt:
+
+			US.getFileNamesOfCollection(req)
+			US.getFilesData(req)
+			newCollectionName, err := US.makeNewCollection(req.OldPath, req.NewCollectionName)
+			if err != nil {
+				req.Status = err
+			}
+
+			req.NewCollectionPath = newCollectionName
+
+			US.InsertFileDataOnNewCollection(req)
+
+			err = US.deleteDirectory(req.NewPath)
+			if err != nil {
+				req.Status = err
+			}
+
+			req.Done <- struct{}{}
+
+		}
+
+	}
+
+}
+
+func (US *UploadService) getFileNamesOfCollection(attempt *attemptchangeCollectionName) {
+
+	var fileNames = []string{}
+
+	attempt.Status = filepath.WalkDir(attempt.OldPath, func(path string, d os.DirEntry, err error) error {
+
+		if err != nil {
+			attempt.Status = err
+		}
+		if !d.IsDir() {
+			fileNames = append(fileNames, filepath.Base(path))
+		}
+
+		return err
+	})
+
+	var filesOnCollection = []file{}
+
+	for _, name := range fileNames {
+		fileName := name[:len(name)-len(filepath.Ext(name))]
+		fileExtension := filepath.Ext(fileName)
+
+		fileOnCollection := file{
+			Name:         fileName,
+			Extension:    fileExtension,
+			CompleteName: fileName + fileExtension,
+		}
+
+		filesOnCollection = append(filesOnCollection, fileOnCollection)
+	}
+
+	attempt.Files = filesOnCollection
+
+}
+
+func (US *UploadService) getFilesData(attempt *attemptchangeCollectionName) {
+
+	var files []bytes.Buffer
+
+	for _, fileName := range attempt.Files {
+
+		var buf bytes.Buffer
+
+		path := filepath.Join(attempt.OldPath, fileName.CompleteName)
+		image, err := os.ReadFile(path)
+
+		if err != nil {
+			attempt.Status = err
+		}
+
+		buf.Write(image)
+
+		files = append(files, buf)
+
+	}
+
+	attempt.FilesData = files
+
+}
+
+func (US *UploadService) InsertFileDataOnNewCollection(attempt *attemptchangeCollectionName) {
+	updatedImages := []models.ImageData{}
+	for i := range attempt.Files {
+
+		updatedImage, err := US.upload(attempt.NewPath, attempt.Files[i].Name, attempt.Files[i].Extension, attempt.FilesData[i], attempt.UserID)
+		if err != nil {
+			attempt.Status = err
+		}
+		updatedImages = append(updatedImages, updatedImage)
+	}
+
+	attempt.ImagesUpdated = updatedImages
+}
+
+func (US *UploadService) UpdateCollectionName(userRepository, collectionName, newCollectionName string, userID uuid.UUID) (string, string, error) {
+	if userRepository == "" || collectionName == "" || newCollectionName == "" {
+		return "", "", errors.New("no parameters provide")
+	}
+
+	oldPath := filepath.Join(US.OriginPath, userRepository, collectionName)
+	newPath := filepath.Join(US.OriginPath, userRepository, newCollectionName)
+
+	attemptChan := make(chan *attemptchangeCollectionName)
+
+	go US.updateCollectionWorker(1, attemptChan)
+
+	attempt := &attemptchangeCollectionName{
+		UserID:            userID,
+		OldPath:           oldPath,
+		NewPath:           newPath,
+		NewCollectionName: newCollectionName,
+		Done:              make(chan struct{}),
+	}
+
+	attemptChan <- attempt
+
+	<-attempt.Done
+	close(attemptChan)
+	close(attempt.Done)
+	if attempt.Status != nil {
+		return "", "", attempt.Status
+	}
+
+	return attempt.NewPath, attempt.NewCollectionName, nil
 }

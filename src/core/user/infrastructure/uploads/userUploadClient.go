@@ -20,11 +20,13 @@ type uploadClient interface {
 
 	CreateCollection(form UserDTO.CreateCollectionForm) (models.CollectionData, error)
 	InsertImageOnCollection(repositoryPath, CollectionPath string, image models.UploadImageForm) (models.ImageData, error)
-	InsertMultipleImagesOnCollection(repositoryPath, collectionPath string, forms []models.UploadImageForm) ([]models.ImageData, error)
+	InsertMultipleImagesOnCollection(collectionPath string, forms []models.UploadImageForm) ([]models.ImageData, error)
 	GetAllMediaFromCollection(repositoryPath, collectionPath string, forms []models.GetImageForm) ([]models.GetImage, error)
-	UpdateImageOnCollection(request models.UpdateImageOnCollection, form models.UploadImageForm) (models.ImageData, error)
+	UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error)
 	DeleteImageOnCollection(request models.DeleteOnCollectionRequest) error
 	DeleteMultipleImagesOnCollection(requests []models.DeleteOnCollectionRequest) error
+	CheckIfImageIsOnCollection(userRepository, collectionName, fileName, fileExtension string) bool
+	UpdateCollectionName(userRepository, collectionName, newCollectionName string, userID uuid.UUID) (string, string, error)
 
 	UploadMedia(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
 	UploadProfileImage(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
@@ -298,7 +300,7 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 	return collectionData, nil
 }
 
-func (C *uploadsClient) UploadImageIntoCollection(collectionName, UserRepository string, form models.UploadImageForm) (models.ImageData, error) {
+func (C *uploadsClient) UploadImageIntoCollection(UserRepository, collectionName string, form models.UploadImageForm) (models.ImageData, error) {
 	if form.FileName == "" || form.FileExtension == "" || collectionName == "" || UserRepository == "" {
 		return models.ImageData{}, errors.New("no parameters provide")
 	}
@@ -322,4 +324,36 @@ func (C *uploadsClient) GetImagesOnCollection(userRepository, collectionName str
 	}
 
 	return Images, nil
+}
+
+func (C *uploadsClient) UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error) {
+	if collectionPath == "" || fileName == "" || fileExtension == "" {
+		return models.ImageData{}, errors.New("no parameters provide")
+	}
+
+	okChan := make(chan bool)
+
+	go func(ok chan<- bool) {
+
+		exits := C.uploadClient.CheckIfImageIsOnCollection(request.UserRepositoryPath, request.CollectionName, request.FileName, request.FileExtension)
+
+		ok <- exits
+
+	}(okChan)
+
+	ok := <-okChan
+	if !ok {
+		close(okChan)
+		return models.ImageData{}, errors.New("image is not on collection")
+	}
+
+	close(okChan)
+
+	ImageData, err := C.uploadClient.UpdateImageOnCollection(request, form)
+	if err != nil {
+		return models.ImageData{}, err
+	}
+
+	return ImageData, nil
+
 }

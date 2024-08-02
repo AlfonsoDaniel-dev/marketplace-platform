@@ -47,7 +47,11 @@ type EmailInterface interface {
 
 type UploadsInterface interface {
 	UploadMedia(userRepository string, image models.UploadImageForm) (models.ImageData, error)
-	CreateCollection(userId uuid.UUID, collectionName, repositoryPath string) (models.CollectionData, error)
 	GetMedia(repositoryPath string, form models.GetImageForm) (bytes.Buffer, error)
+	UploadProfilePicture(repositoryPath string, form models.UploadImageForm) (models.ImageData, error)
 	GetProfilePicture(repositoryPath, fileName, fileExtension string, userId uuid.UUID) (models.GetImage, error)
+	CreateCollection(userId uuid.UUID, collectionName, repositoryPath string) (models.CollectionData, error)
+	UploadImageIntoCollection(UserRepository, collectionName string, form models.UploadImageForm) (models.ImageData, error)
+	GetImagesOnCollection(UserRepository, collectionName string, forms []models.GetImageForm) ([]models.GetImage, error)
+	UpdateImageOnCollection(request models.UpdateImageOnCollection, form models.UploadImageForm) (models.ImageData, error)
 }

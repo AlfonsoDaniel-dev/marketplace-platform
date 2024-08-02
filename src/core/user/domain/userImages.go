@@ -66,26 +66,6 @@ func (u *UserDomain) CreateCollection(form UserDTO.CreateCollection) error {
 	return nil
 }
 
-func (u *UserDomain) PostImageOnPost(form models.UploadImageForm) error {
-	if form.FileName == "" || form.FileExtension == "" || form.UserEmail == "" {
-		return errors.New("no file name")
-	}
-
-	userId, err := u.OutputInterface.PsqlGetUserIdByEmail(form.UserEmail)
-	if err != nil {
-		return err
-	}
-
-	if form.UserID != userId {
-		form.UserID = userId
-	}
-
-	if err != nil {
-		return err
-	}
-
-}
-
 func (u *UserDomain) UploadNewImage(imageform models.UploadImageForm) error {
 	if imageform.FileName == "" || imageform.FileExtension == "" || imageform.UserEmail == "" {
 		return errors.New("no needed fields provide")

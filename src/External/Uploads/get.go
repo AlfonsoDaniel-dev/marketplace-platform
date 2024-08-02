@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/google/uuid"
 	"os"
+	"path/filepath"
 	"shopperia/src/common/models"
 )
 
@@ -13,7 +14,8 @@ func (US *UploadService) GetMedia(repositoryPath, fileName, fileExtension string
 		return bytes.Buffer{}, errors.New("No path or name provided")
 	}
 
-	completePath := US.OriginPath + "/" + repositoryPath + "/" + fileName + "." + fileExtension
+	completeFileName := fileName + "." + fileExtension
+	completePath := filepath.Join(repositoryPath, completeFileName)
 	image, err := os.ReadFile(completePath)
 	if err != nil {
 		return bytes.Buffer{}, err

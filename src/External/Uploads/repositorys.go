@@ -18,7 +18,7 @@ func (US *UploadService) MakeNewMediaRepositoryForUser(userId uuid.UUID) (string
 }
 
 func (US *UploadService) CheckUserHasAMediaRepository(userId uuid.UUID) bool {
-	repoPath := getEntryPoint() + US.OriginPath + "/" + "user" + "_" + userId.String()
+	repoPath := US.OriginPath + "/" + "user" + "_" + userId.String()
 	_, err := os.Stat(repoPath)
 	if os.IsExist(err) {
 		return true

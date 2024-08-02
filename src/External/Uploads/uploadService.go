@@ -14,6 +14,25 @@ type UploadService struct {
 	OriginPath string
 }
 
+type file struct {
+	CompleteName string
+	Name         string
+	Extension    string
+}
+
+type attemptchangeCollectionName struct {
+	UserID            uuid.UUID
+	OldPath           string
+	NewPath           string
+	NewCollectionName string
+	Status            error
+	Files             []file
+	FilesData         []bytes.Buffer
+	NewCollectionPath string
+	ImagesUpdated     []models.ImageData
+	Done              chan struct{}
+}
+
 type deleteRequest struct {
 	ResourcePath string
 	Status       error
@@ -33,12 +52,31 @@ func (US *UploadService) createFile(AbsoluteFilePath string) (*os.File, error) {
 		return &os.File{}, errors.New("name is empty")
 	}
 
-	file, err := os.Create(AbsoluteFilePath)
+	NewFile, err := os.Create(AbsoluteFilePath)
 	if err != nil {
 		return &os.File{}, err
 	}
 
-	return file, nil
+	return NewFile, nil
+}
+
+func (US *UploadService) countFilesOnDirectory(oldPath string, count chan<- int, errChan chan<- error) {
+
+	var numberOfFiles int
+
+	err := filepath.Walk(oldPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			numberOfFiles++
+		}
+		return nil
+	})
+
+	count <- numberOfFiles
+	errChan <- err
 }
 
 func (US *UploadService) upload(repositoryPath, fileName, fileExtension string, image bytes.Buffer, userId uuid.UUID) (models.ImageData, error) {
@@ -50,20 +88,20 @@ func (US *UploadService) upload(repositoryPath, fileName, fileExtension string, 
 
 	dest := filepath.Join(US.OriginPath, repositoryPath, name)
 
-	file, err := US.createFile(dest)
+	newFile, err := US.createFile(dest)
 	if err != nil {
 		return models.ImageData{}, err
 	}
 
 	imageBytes := image.Bytes()
 
-	_, err = file.Write(imageBytes)
+	_, err = newFile.Write(imageBytes)
 	if err != nil {
-		file.Close()
+		newFile.Close()
 		return models.ImageData{}, err
 	}
 
-	file.Close()
+	newFile.Close()
 
 	imageData := models.ImageData{
 		UserId:              userId,
@@ -92,12 +130,12 @@ func (US *UploadService) delete(RelativeResourcePath string) error {
 	return nil
 }
 
-func (US *UploadService) deleteDirectory(relativeFatherPath, directoryName string) error {
-	if relativeFatherPath == "" || directoryName == "" {
-		return errors.New("resource path is empty")
+func (US *UploadService) deleteDirectory(directoryPath string) error {
+	if directoryPath == "" {
+		return errors.New("no directory path provide")
 	}
 
-	resourcePath := filepath.Join(US.OriginPath, relativeFatherPath, directoryName)
+	resourcePath := filepath.Join(directoryPath)
 	err := os.RemoveAll(resourcePath)
 	if err != nil {
 		return err
@@ -106,11 +144,11 @@ func (US *UploadService) deleteDirectory(relativeFatherPath, directoryName strin
 	return nil
 }
 
-func (US *UploadService) MakeNewDirectory(fatherPathOpcional, NewDirName string) (string, error) {
+func (US *UploadService) MakeNewDirectory(fatherPath, NewDirName string) (string, error) {
 	if NewDirName != "" {
 		return "", errors.New("new directory name is empty")
-	} else if fatherPathOpcional == "" {
-		path := getEntryPoint() + "/" + US.OriginPath + "/" + NewDirName
+	} else if fatherPath == "" {
+		path := US.OriginPath + "/" + NewDirName
 		err := os.Mkdir(path, 0755)
 		if err != nil {
 			return "", err
@@ -119,7 +157,7 @@ func (US *UploadService) MakeNewDirectory(fatherPathOpcional, NewDirName string)
 		return path, nil
 	}
 
-	path := getEntryPoint() + "/" + US.OriginPath + "/" + fatherPathOpcional + "/" + NewDirName
+	path := fatherPath + "/" + NewDirName
 	err := os.Mkdir(path, 0755)
 	if err != nil {
 		return "", err
