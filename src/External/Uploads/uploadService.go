@@ -47,6 +47,16 @@ type uploadImageSingleAttempt struct {
 	Done          chan struct{}
 }
 
+type updateImageAttempt struct {
+	OldFileName      string
+	OldFileExtension string
+	Repository       string
+	Form             models.UploadImageForm
+	NewImageData     models.ImageData
+	Status           error
+	Done             chan struct{}
+}
+
 func (US *UploadService) createFile(AbsoluteFilePath string) (*os.File, error) {
 	if AbsoluteFilePath == "" {
 		return &os.File{}, errors.New("name is empty")
@@ -115,6 +125,21 @@ func (US *UploadService) upload(repositoryPath, fileName, fileExtension string, 
 	return imageData, nil
 }
 
+func (US *UploadService) CheckImageExists(repositoryPath, fileName, fileExtension string) bool {
+	if repositoryPath == "" || fileName == "" || fileExtension == "" {
+		return false
+	}
+
+	completeFileName := filepath.Join(repositoryPath, fileName+"."+fileExtension)
+
+	_, err := os.Stat(completeFileName)
+	if !os.IsExist(err) {
+		return false
+	}
+
+	return true
+}
+
 func (US *UploadService) delete(RelativeResourcePath string) error {
 	if RelativeResourcePath == "" {
 		return errors.New("resource path is empty")
@@ -166,11 +191,47 @@ func (US *UploadService) MakeNewDirectory(fatherPath, NewDirName string) (string
 	return path, nil
 }
 
+func (US *UploadService) updateImageWorker(numAttempt int, reqChan chan updateImageAttempt) {
+
+	var i int
+
+	for {
+		if i == numAttempt {
+			break
+		}
+
+		select {
+		case req := <-reqChan:
+			resourcePath := filepath.Join(req.Repository, req.OldFileName+"."+req.OldFileExtension)
+			err := US.delete(resourcePath)
+			if err != nil {
+				req.Status = err
+				req.Done <- struct{}{}
+			}
+
+			imageData, err := US.upload(req.Repository, req.Form.FileName, req.Form.FileExtension, req.Form.ImageData, req.Form.UserID)
+			if err != nil {
+				req.Status = err
+				req.Done <- struct{}{}
+			}
+
+			req.NewImageData = imageData
+			i++
+
+			req.Done <- struct{}{}
+		}
+	}
+}
+
 func (US *UploadService) uploadWorker(requestChan chan *uploadImageSingleAttempt) {
 	for {
 		select {
 		case request := <-requestChan:
 			imageData, err := US.upload(request.DirectoryPath, request.Image.FileName, request.Image.FileExtension, request.Image.ImageData, request.Image.UserID)
+			if err != nil {
+				request.Status = err
+				request.Done <- struct{}{}
+			}
 			request.Data = imageData
 			request.Status = err
 
@@ -192,6 +253,10 @@ func (US *UploadService) deleteWorker(numAttemps int, requestChan chan *deleteRe
 		select {
 		case req := <-requestChan:
 			err := US.delete(req.ResourcePath)
+			if err != nil {
+				req.Status = err
+				req.Done <- struct{}{}
+			}
 			req.Status = err
 			req.Done <- struct{}{}
 			requestChan <- req

@@ -323,13 +323,13 @@ func (US *UploadService) DeleteMultipleImagesOnCollection(requests []models.Dele
 	return nil
 }
 
-func (US *UploadService) CheckIfImageIsOnCollection(userRepository, collectionName, fileName, fileExtension string) bool {
-	if userRepository == "" || collectionName == "" || fileName == "" || fileExtension == "" {
+func (US *UploadService) CheckIfImageIsOnCollection(collectionPath, fileName, fileExtension string) bool {
+	if collectionPath == "" || fileName == "" || fileExtension == "" {
 		return false
 	}
 
 	completeFileName := fileName + "." + fileExtension
-	path := filepath.Join(US.OriginPath, userRepository, collectionName, completeFileName)
+	path := filepath.Join(collectionPath, completeFileName)
 	_, err := os.Stat(path)
 	if !os.IsExist(err) {
 		return false

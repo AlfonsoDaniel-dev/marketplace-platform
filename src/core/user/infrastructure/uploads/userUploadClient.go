@@ -8,7 +8,6 @@ import (
 	"shopperia/src/External/Uploads"
 	"shopperia/src/common/models"
 	UserDTO "shopperia/src/core/user/domain/DTO"
-	"sync"
 )
 
 type uploadClient interface {
@@ -16,6 +15,7 @@ type uploadClient interface {
 	MakeNewMediaRepositoryForUser(userId uuid.UUID) (string, error)
 
 	CheckUserHasAMediaRepository(userId uuid.UUID) bool
+	CheckImageExists(repository, fileName, fileExtension string) bool
 	GetUserRepositoryPath(userId uuid.UUID) (string, error)
 
 	CreateCollection(form UserDTO.CreateCollectionForm) (models.CollectionData, error)
@@ -25,11 +25,12 @@ type uploadClient interface {
 	UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error)
 	DeleteImageOnCollection(request models.DeleteOnCollectionRequest) error
 	DeleteMultipleImagesOnCollection(requests []models.DeleteOnCollectionRequest) error
-	CheckIfImageIsOnCollection(userRepository, collectionName, fileName, fileExtension string) bool
+	CheckIfImageIsOnCollection(collectionPath, fileName, fileExtension string) bool
 	UpdateCollectionName(userRepository, collectionName, newCollectionName string, userID uuid.UUID) (string, string, error)
 
 	UploadMedia(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
 	UploadProfileImage(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
+	UpdateProfileImage(repositoryPath, oldFileName, oldFileExtension string, image models.UploadImageForm) (models.ImageData, error)
 	UploadMultipleMediaResourcesOnRepository(repositoryPath string, images []models.UploadImageForm) ([]models.ImageData, error)
 
 	GetMedia(repositoryPath, fileName, fileExtension string) (bytes.Buffer, error)
@@ -149,22 +150,18 @@ func (C *uploadsClient) UploadProfilePicture(repositoryPath string, form models.
 	if form.FileName == "" || form.FileExtension == "" {
 		return models.ImageData{}, errors.New("no file name provided")
 	} else if repositoryPath == "" {
-		var ok bool
 		var err error
 
-		wg := sync.WaitGroup{}
+		okChan := make(chan bool)
 
-		wg.Add(1)
+		go func(condition chan<- bool) {
 
-		go func(w *sync.WaitGroup) {
+			ok := C.uploadClient.CheckUserHasAMediaRepository(form.UserID)
+			condition <- ok
 
-			ok = C.uploadClient.CheckUserHasAMediaRepository(form.UserID)
+		}(okChan)
 
-			w.Done()
-
-		}(&wg)
-
-		wg.Wait()
+		ok := <-okChan
 
 		if !ok {
 			repositoryPath, err = C.uploadClient.MakeNewMediaRepositoryForUser(form.UserID)
@@ -226,6 +223,33 @@ func (C *uploadsClient) GetProfilePicture(repositoryPath, fileName, fileExtensio
 	imageData := <-dataChan
 
 	return imageData, nil
+}
+
+func (C *uploadsClient) UpdateProfilePicture(repositoryPath, oldFileName, oldFileExtension string, NewImage models.UploadImageForm) (models.ImageData, error) {
+	if repositoryPath == "" || oldFileName == "" || oldFileExtension == "" {
+		return models.ImageData{}, errors.New("no parameters provide")
+	}
+
+	okChan := make(chan bool)
+
+	go func(condition chan<- bool) {
+
+		ok := C.uploadClient.CheckImageExists(repositoryPath, oldFileName, oldFileExtension)
+
+		condition <- ok
+	}(okChan)
+
+	ok := <-okChan
+	if !ok {
+		return models.ImageData{}, errors.New("image does not exist")
+	}
+
+	NewData, err := C.uploadClient.UpdateProfileImage(repositoryPath, oldFileName, oldFileExtension, NewImage)
+	if err != nil {
+		return models.ImageData{}, err
+	}
+
+	return NewData, nil
 }
 
 func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repositoryPath string) (models.CollectionData, error) {
@@ -335,7 +359,7 @@ func (C *uploadsClient) UpdateImageOnCollection(collectionPath, fileName, fileEx
 
 	go func(ok chan<- bool) {
 
-		exits := C.uploadClient.CheckIfImageIsOnCollection(request.UserRepositoryPath, request.CollectionName, request.FileName, request.FileExtension)
+		exits := C.uploadClient.CheckIfImageIsOnCollection(collectionPath, fileName, fileExtension)
 
 		ok <- exits
 
@@ -349,7 +373,7 @@ func (C *uploadsClient) UpdateImageOnCollection(collectionPath, fileName, fileEx
 
 	close(okChan)
 
-	ImageData, err := C.uploadClient.UpdateImageOnCollection(request, form)
+	ImageData, err := C.uploadClient.UpdateImageOnCollection(collectionPath, fileName, fileExtension, form)
 	if err != nil {
 		return models.ImageData{}, err
 	}
