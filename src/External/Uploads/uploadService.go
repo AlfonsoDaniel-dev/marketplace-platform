@@ -34,6 +34,7 @@ type attemptchangeCollectionName struct {
 }
 
 type deleteRequest struct {
+	IsDirectory  bool
 	ResourcePath string
 	Status       error
 	Done         chan struct{}
@@ -252,12 +253,16 @@ func (US *UploadService) deleteWorker(numAttemps int, requestChan chan *deleteRe
 
 		select {
 		case req := <-requestChan:
-			err := US.delete(req.ResourcePath)
-			if err != nil {
-				req.Status = err
+			if !req.IsDirectory {
+
+				req.Status = US.delete(req.ResourcePath)
+
 				req.Done <- struct{}{}
+				requestChan <- req
+				i++
 			}
-			req.Status = err
+
+			req.Status = US.deleteDirectory(req.ResourcePath)
 			req.Done <- struct{}{}
 			requestChan <- req
 			i++

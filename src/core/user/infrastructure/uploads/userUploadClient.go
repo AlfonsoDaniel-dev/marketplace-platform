@@ -18,16 +18,6 @@ type uploadClient interface {
 	CheckImageExists(repository, fileName, fileExtension string) bool
 	GetUserRepositoryPath(userId uuid.UUID) (string, error)
 
-	CreateCollection(form UserDTO.CreateCollectionForm) (models.CollectionData, error)
-	InsertImageOnCollection(repositoryPath, CollectionPath string, image models.UploadImageForm) (models.ImageData, error)
-	InsertMultipleImagesOnCollection(collectionPath string, forms []models.UploadImageForm) ([]models.ImageData, error)
-	GetAllMediaFromCollection(repositoryPath, collectionPath string, forms []models.GetImageForm) ([]models.GetImage, error)
-	UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error)
-	DeleteImageOnCollection(request models.DeleteOnCollectionRequest) error
-	DeleteMultipleImagesOnCollection(requests []models.DeleteOnCollectionRequest) error
-	CheckIfImageIsOnCollection(collectionPath, fileName, fileExtension string) bool
-	UpdateCollectionName(userRepository, collectionName, newCollectionName string, userID uuid.UUID) (string, string, error)
-
 	UploadMedia(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
 	UploadProfileImage(repositoryPath string, image models.UploadImageForm) (models.ImageData, error)
 	UpdateProfileImage(repositoryPath, oldFileName, oldFileExtension string, image models.UploadImageForm) (models.ImageData, error)
@@ -37,27 +27,52 @@ type uploadClient interface {
 	GetProfileImage(repositoryPath, fileName, fileExtension string, userId uuid.UUID) (bytes.Buffer, error)
 }
 
-var userPath string = "./src/core/user/infrastructure/uploads/main/repository"
-
-type uploadsClient struct {
-	uploadClient
+type collectionsInterface interface {
+	CreateCollection(form UserDTO.CreateCollectionForm) (models.CollectionData, error)
+	DeleteCollection(collectionPath string) error
+	InsertImageOnCollection(collectionPath string, image models.UploadImageForm) (models.ImageData, error)
+	InsertMultipleImagesOnCollection(collectionPath string, forms []models.UploadImageForm) ([]models.ImageData, error)
+	GetAllMediaFromCollection(repositoryPath, collectionPath string, forms []models.GetImageForm) ([]models.GetImage, error)
+	UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error)
+	DeleteImageOnCollection(request models.DeleteOnCollectionRequest) error
+	DeleteMultipleImagesOnCollection(requests []models.DeleteOnCollectionRequest) error
+	CheckIfImageIsOnCollection(collectionPath, fileName, fileExtension string) bool
+	UpdateCollectionName(userRepository, collectionName, newCollectionName string, userID uuid.UUID) (string, string, error)
 }
 
-func NewUploadsClient() *uploadsClient {
+type postsInterface interface {
+	MakeNewPostsDir(userRepository string) (models.CollectionData, error)
+	CheckIfUserHasPostsDir(userRepository string) (bool, error)
+	NewPost(postsDir, postName string) (string, error)
+	UpdatePostName(postsDir, OldPostName, NewPostName string, userId uuid.UUID) (string, string, error)
+	DeleteImageOnPost(filePath string) error
+	UploadImagesOnPost(postDirectory string, images []models.UploadImageForm) ([]models.ImageData, error)
+	UpdatePostImage(postDir, fileName, fileExtension string, NewImage models.UploadImageForm) (models.ImageData, error)
+}
+
+var userPath string = "./src/core/user/infrastructure/uploads/main/repository"
+
+type UploadsClient struct {
+	uploadClient
+	collectionsInterface
+	postsInterface
+}
+
+func NewUploadsClient() *UploadsClient {
 
 	client := Uploads.NewUploadService(userPath)
 
-	return &uploadsClient{
+	return &UploadsClient{
 		uploadClient: client,
 	}
 }
 
 /*
-func (C *uploadsClient) CreateUserRepository(userId uuid.UUID) (string, error) {
+func (C *UploadsClient) CreateUserRepository(userId uuid.UUID) (string, error) {
 
 } */
 
-func (C *uploadsClient) UploadMedia(userRepository string, image models.UploadImageForm) (models.ImageData, error) {
+func (C *UploadsClient) UploadMedia(userRepository string, image models.UploadImageForm) (models.ImageData, error) {
 	if image.FileName == "" {
 		return models.ImageData{}, errors.New("no file name provided")
 	}
@@ -114,7 +129,7 @@ func (C *uploadsClient) UploadMedia(userRepository string, image models.UploadIm
 	return imageData, nil
 }
 
-func (C *uploadsClient) GetMedia(repositoryPath string, form models.GetImageForm) (bytes.Buffer, error) {
+func (C *UploadsClient) GetMedia(repositoryPath string, form models.GetImageForm) (bytes.Buffer, error) {
 	if repositoryPath == "" || form.FileName == "" || form.FileExtension == "" {
 		return bytes.Buffer{}, errors.New("no parameters provide")
 	}
@@ -146,7 +161,7 @@ func (C *uploadsClient) GetMedia(repositoryPath string, form models.GetImageForm
 	return data, nil
 }
 
-func (C *uploadsClient) UploadProfilePicture(repositoryPath string, form models.UploadImageForm) (models.ImageData, error) {
+func (C *UploadsClient) UploadProfilePicture(repositoryPath string, form models.UploadImageForm) (models.ImageData, error) {
 	if form.FileName == "" || form.FileExtension == "" {
 		return models.ImageData{}, errors.New("no file name provided")
 	} else if repositoryPath == "" {
@@ -186,7 +201,7 @@ func (C *uploadsClient) UploadProfilePicture(repositoryPath string, form models.
 	return data, nil
 }
 
-func (C *uploadsClient) GetProfilePicture(repositoryPath, fileName, fileExtension string, userId uuid.UUID) (models.GetImage, error) {
+func (C *UploadsClient) GetProfileImage(repositoryPath, fileName, fileExtension string, userId uuid.UUID) (models.GetImage, error) {
 
 	if userId == uuid.Nil || repositoryPath == "" || fileName == "" || fileExtension == "" {
 		return models.GetImage{}, errors.New("no parameters provide")
@@ -225,7 +240,7 @@ func (C *uploadsClient) GetProfilePicture(repositoryPath, fileName, fileExtensio
 	return imageData, nil
 }
 
-func (C *uploadsClient) UpdateProfilePicture(repositoryPath, oldFileName, oldFileExtension string, NewImage models.UploadImageForm) (models.ImageData, error) {
+func (C *UploadsClient) UpdateProfilePicture(repositoryPath, oldFileName, oldFileExtension string, NewImage models.UploadImageForm) (models.ImageData, error) {
 	if repositoryPath == "" || oldFileName == "" || oldFileExtension == "" {
 		return models.ImageData{}, errors.New("no parameters provide")
 	}
@@ -252,7 +267,7 @@ func (C *uploadsClient) UpdateProfilePicture(repositoryPath, oldFileName, oldFil
 	return NewData, nil
 }
 
-func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repositoryPath string) (models.CollectionData, error) {
+func (C *UploadsClient) CreateCollection(userId uuid.UUID, collectionName, repositoryPath string) (models.CollectionData, error) {
 	if collectionName == "" || userId == uuid.Nil {
 		return models.CollectionData{}, errors.New("no collection name provide")
 	}
@@ -263,6 +278,7 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 	go func(channel chan<- models.CollectionData, errorChan chan<- error) {
 
 		var err error
+
 		if repositoryPath == "" {
 
 			exists := C.uploadClient.CheckUserHasAMediaRepository(userId)
@@ -280,7 +296,7 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 					UserRepositoryPath: repositoryData,
 				}
 
-				collectionData, err := C.uploadClient.CreateCollection(form)
+				collectionData, err := C.collectionsInterface.CreateCollection(form)
 				if err != nil {
 					errChan <- err
 					return
@@ -303,7 +319,7 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 			UserRepositoryPath: repositoryPath,
 		}
 
-		collectionData, err := C.uploadClient.CreateCollection(form)
+		collectionData, err := C.collectionsInterface.CreateCollection(form)
 		if err != nil {
 			errChan <- err
 			return
@@ -324,12 +340,31 @@ func (C *uploadsClient) CreateCollection(userId uuid.UUID, collectionName, repos
 	return collectionData, nil
 }
 
-func (C *uploadsClient) UploadImageIntoCollection(UserRepository, collectionName string, form models.UploadImageForm) (models.ImageData, error) {
-	if form.FileName == "" || form.FileExtension == "" || collectionName == "" || UserRepository == "" {
+func (C *UploadsClient) UpdateCollectionName(userRespository, collectionName, NewCollectionName string, userID uuid.UUID) (models.CollectionData, error) {
+	if userRespository == "" || collectionName == "" || NewCollectionName == "" {
+		return models.CollectionData{}, errors.New("no parameters provide")
+	}
+
+	collectionPath, collectionName, err := C.collectionsInterface.UpdateCollectionName(userRespository, collectionName, NewCollectionName, userID)
+	if err != nil {
+		return models.CollectionData{}, err
+	}
+
+	data := models.CollectionData{
+		CollectionName: collectionName,
+		UserRepository: userRespository,
+		CollectionPath: collectionPath,
+	}
+
+	return data, nil
+}
+
+func (C *UploadsClient) UploadImageIntoCollection(collectionPath string, form models.UploadImageForm) (models.ImageData, error) {
+	if form.FileName == "" || form.FileExtension == "" || collectionPath == "" {
 		return models.ImageData{}, errors.New("no parameters provide")
 	}
 
-	Data, err := C.uploadClient.InsertImageOnCollection(UserRepository, collectionName, form)
+	Data, err := C.collectionsInterface.InsertImageOnCollection(collectionPath, form)
 	if err != nil {
 		return models.ImageData{}, err
 	}
@@ -337,12 +372,12 @@ func (C *uploadsClient) UploadImageIntoCollection(UserRepository, collectionName
 	return Data, nil
 }
 
-func (C *uploadsClient) GetImagesOnCollection(userRepository, collectionName string, forms []models.GetImageForm) ([]models.GetImage, error) {
+func (C *UploadsClient) GetImagesOnCollection(userRepository, collectionName string, forms []models.GetImageForm) ([]models.GetImage, error) {
 	if userRepository == "" || len(forms) == 0 {
 		return nil, errors.New("no parameters provide")
 	}
 
-	Images, err := C.uploadClient.GetAllMediaFromCollection(userRepository, collectionName, forms)
+	Images, err := C.collectionsInterface.GetAllMediaFromCollection(userRepository, collectionName, forms)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +385,7 @@ func (C *uploadsClient) GetImagesOnCollection(userRepository, collectionName str
 	return Images, nil
 }
 
-func (C *uploadsClient) UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error) {
+func (C *UploadsClient) UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error) {
 	if collectionPath == "" || fileName == "" || fileExtension == "" {
 		return models.ImageData{}, errors.New("no parameters provide")
 	}
@@ -359,7 +394,7 @@ func (C *uploadsClient) UpdateImageOnCollection(collectionPath, fileName, fileEx
 
 	go func(ok chan<- bool) {
 
-		exits := C.uploadClient.CheckIfImageIsOnCollection(collectionPath, fileName, fileExtension)
+		exits := C.collectionsInterface.CheckIfImageIsOnCollection(collectionPath, fileName, fileExtension)
 
 		ok <- exits
 
@@ -373,11 +408,81 @@ func (C *uploadsClient) UpdateImageOnCollection(collectionPath, fileName, fileEx
 
 	close(okChan)
 
-	ImageData, err := C.uploadClient.UpdateImageOnCollection(collectionPath, fileName, fileExtension, form)
+	ImageData, err := C.collectionsInterface.UpdateImageOnCollection(collectionPath, fileName, fileExtension, form)
 	if err != nil {
 		return models.ImageData{}, err
 	}
 
 	return ImageData, nil
 
+}
+
+func (C *UploadsClient) NewPost(userID uuid.UUID, postsDir, userRepository, postName string) (models.PostData, error) {
+	if postName == "" {
+		return models.PostData{}, errors.New("new post name is required")
+	} else if postsDir == "" || userRepository == "" {
+
+		okChan := make(chan bool)
+
+		go func(condition chan<- bool) {
+
+			ok := C.uploadClient.CheckUserHasAMediaRepository(userID)
+
+			condition <- ok
+
+		}(okChan)
+
+		ok := <-okChan
+		close(okChan)
+		if !ok {
+			var err error
+
+			userRepository, err = C.uploadClient.MakeNewMediaRepositoryForUser(userID)
+			if err != nil {
+				return models.PostData{}, err
+			}
+
+			postsDirData, err := C.postsInterface.MakeNewPostsDir(userRepository)
+			if err != nil {
+				return models.PostData{}, err
+			}
+
+			postPath, err := C.postsInterface.NewPost(postsDirData.CollectionPath, postName)
+			if err != nil {
+				return models.PostData{}, err
+			}
+
+			Data := models.PostData{
+				ID:             uuid.New(),
+				UserRepository: userRepository,
+				UserPostsDir:   postsDirData.CollectionPath,
+				Path:           postPath,
+			}
+
+			return Data, nil
+
+		}
+	}
+
+	var err error
+
+	NewPostPath, err := C.postsInterface.NewPost(postsDir, postName)
+	if err != nil {
+		return models.PostData{}, err
+	}
+
+	userRepository, err = C.uploadClient.GetUserRepositoryPath(userID)
+	if err != nil {
+		errStr := fmt.Sprintf("no user repository found, error while creating it: %v", err)
+		return models.PostData{}, errors.New(errStr)
+	}
+
+	Data := models.PostData{
+		ID:             uuid.New(),
+		UserRepository: userRepository,
+		UserPostsDir:   postsDir,
+		Path:           NewPostPath,
+	}
+
+	return Data, nil
 }

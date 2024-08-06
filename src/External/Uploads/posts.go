@@ -85,3 +85,35 @@ func (US *UploadService) UpdatePostImage(postDir, fileName, fileExtension string
 
 	return imgData, nil
 }
+
+func (US *UploadService) UpdatePostName(postsDir, oldPostName, NewPostName string, userId uuid.UUID) (string, string, error) {
+
+	NewPostPath, NewPostName, err := US.UpdateCollectionName(postsDir, oldPostName, NewPostName, userId)
+
+	return NewPostPath, NewPostName, err
+}
+
+func (US *UploadService) DeletePost() {}
+
+func (US *UploadService) DeleteImageOnPost(filePath string) error {
+	if filePath == "" {
+		return errors.New("filepath is required")
+	}
+
+	reqChan := make(chan *deleteRequest)
+
+	go US.deleteWorker(1, reqChan)
+
+	req := &deleteRequest{
+		IsDirectory:  false,
+		ResourcePath: filePath,
+		Done:         make(chan struct{}),
+	}
+
+	reqChan <- req
+
+	<-req.Done
+	close(reqChan)
+
+	return req.Status
+}

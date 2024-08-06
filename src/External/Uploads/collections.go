@@ -46,7 +46,7 @@ func (US *UploadService) CreateCollection(form UserDTO.CreateCollectionForm) (mo
 	return collectionData, nil
 }
 
-func (US *UploadService) InsertImageOnCollection(repositoryPath, collectionPath string, image models.UploadImageForm) (models.ImageData, error) {
+func (US *UploadService) InsertImageOnCollection(collectionPath string, image models.UploadImageForm) (models.ImageData, error) {
 	if collectionPath == "" {
 		return models.ImageData{}, errors.New("collection path is empty")
 	}
@@ -55,12 +55,10 @@ func (US *UploadService) InsertImageOnCollection(repositoryPath, collectionPath 
 
 	go US.uploadWorker(requestChan)
 
-	Path := filepath.Join(US.OriginPath, repositoryPath, collectionPath)
-
 	uploadAttempt := &uploadImageSingleAttempt{
 		Image:         image,
 		Done:          make(chan struct{}),
-		DirectoryPath: Path,
+		DirectoryPath: collectionPath,
 	}
 
 	requestChan <- uploadAttempt
@@ -382,8 +380,33 @@ func (US *UploadService) UpdateImageOnCollection(collectionPath, fileName, fileE
 
 }
 
-func (US *UploadService) DeleteCollection(userRepository, collectionName string) error {
+func (US *UploadService) DeleteCollection(collectionPath string) error {
+
+	if collectionPath == "" {
+		return errors.New("no collection path provided")
+	}
+
+	requestChannel := make(chan *deleteRequest)
+
+	go US.deleteWorker(1, requestChannel)
+
+	req := &deleteRequest{
+		IsDirectory:  true,
+		ResourcePath: collectionPath,
+		Done:         make(chan struct{}),
+	}
+
+	requestChannel <- req
+	<-req.Done
+
+	if req.Status != nil {
+		return req.Status
+	}
+
+	close(requestChannel)
+	close(req.Done)
 	return nil
+
 }
 
 func (US *UploadService) updateCollectionWorker(numAttempts int, attempt chan *attemptchangeCollectionName) {
