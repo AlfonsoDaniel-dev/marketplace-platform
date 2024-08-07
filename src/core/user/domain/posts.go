@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (u *UserDomain) CreatePostO(email, postName string, form UserDTO.CreatePostDTO) error {
+func (u *UserDomain) CreatePost(email, postName string, form UserDTO.CreatePostDTO) error {
 
 	userId, err := u.OutputInterface.PsqlGetUserIdByEmail(email)
 	if err != nil {
