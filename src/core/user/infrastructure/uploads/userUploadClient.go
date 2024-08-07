@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"path/filepath"
 	"shopperia/src/External/Uploads"
 	"shopperia/src/common/models"
 	UserDTO "shopperia/src/core/user/domain/DTO"
@@ -43,6 +44,7 @@ type collectionsInterface interface {
 type postsInterface interface {
 	MakeNewPostsDir(userRepository string) (models.CollectionData, error)
 	CheckIfUserHasPostsDir(userRepository string) (bool, error)
+	CheckIfPostExists(PostDir string) bool
 	NewPost(postsDir, postName string) (string, error)
 	UpdatePostName(postsDir, OldPostName, NewPostName string, userId uuid.UUID) (string, string, error)
 	DeleteImageOnPost(filePath string) error
@@ -479,6 +481,64 @@ func (C *UploadsClient) NewPost(userID uuid.UUID, postsDir, userRepository, post
 
 	Data := models.PostData{
 		ID:             uuid.New(),
+		UserRepository: userRepository,
+		UserPostsDir:   postsDir,
+		Path:           NewPostPath,
+	}
+
+	return Data, nil
+}
+
+func (C *UploadsClient) UpdateImageOnPost(postDir, fileName, fileDescription string, NewImage models.UploadImageForm) (models.ImageData, error) {
+	if postDir == "" || fileName == "" || fileDescription == "" {
+		return models.ImageData{}, errors.New("no parameters provide")
+	}
+
+	ok := C.postsInterface.CheckIfPostExists(postDir)
+	if !ok {
+		return models.ImageData{}, errors.New("post does not exits")
+	}
+
+	Data, err := C.postsInterface.UpdatePostImage(postDir, fileName, fileDescription, NewImage)
+	if err != nil {
+		return models.ImageData{}, err
+	}
+
+	return Data, nil
+}
+
+func (C *UploadsClient) DeleteImageOnPost(postDir, fileName, fileExtension string) error {
+	if postDir == "" || fileName == "" || fileExtension == "" {
+		return errors.New("no parameters provide")
+	}
+
+	path := filepath.Join(postDir, fileName+"."+fileExtension)
+
+	err := C.postsInterface.DeleteImageOnPost(path)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (C *UploadsClient) UpdatePostName(postsDir, postName, NewPostName string, userId uuid.UUID) (models.PostData, error) {
+	if postsDir == "" || postName == "" || NewPostName == "" || userId == uuid.Nil {
+		return models.PostData{}, errors.New("no parameters provide")
+	}
+
+	NewPostPath, NewPostName, err := C.postsInterface.UpdatePostName(postsDir, postName, NewPostName, userId)
+	if err != nil {
+		return models.PostData{}, err
+	}
+
+	userRepository, err := C.GetUserRepositoryPath(userId)
+	if err != nil {
+		return models.PostData{}, err
+	}
+
+	Data := models.PostData{
+		ID:             uuid.UUID{},
 		UserRepository: userRepository,
 		UserPostsDir:   postsDir,
 		Path:           NewPostPath,

@@ -30,12 +30,8 @@ func (p *psqlUser) PsqlInsertRepositoryPathOnUser(userId uuid.UUID, repositoryPa
 }
 
 func (p *psqlUser) PsqlGetUserRepositoryPath(userId uuid.UUID) (string, error) {
-	tx, err := p.DB.Begin()
-	if err != nil {
-		return "", err
-	}
 
-	res, err := db2.RunQuery(tx, sqlGetUserRepositoryPath, userId)
+	res, err := db2.RunQuery(p.DB, sqlGetUserRepositoryPath, userId)
 	if err != nil {
 		return "", err
 	}
@@ -69,12 +65,7 @@ func (p *psqlUser) PsqlInsertImageData(imageID, userId uuid.UUID, userRepository
 }
 
 func (p *psqlUser) PsqlGetUserProfilePictureData(email string) (models.ImageData, error) {
-	tx, err := p.DB.Begin()
-	if err != nil {
-		return models.ImageData{}, err
-	}
-
-	res, err := db2.RunQuery(tx, sqlGetUserProfilePictureData, email)
+	res, err := db2.RunQuery(p.DB, sqlGetUserProfilePictureData, email)
 	if err != nil {
 		return models.ImageData{}, err
 	}
@@ -85,17 +76,6 @@ func (p *psqlUser) PsqlGetUserProfilePictureData(email string) (models.ImageData
 	if err != nil {
 		fmt.Println(err)
 		return models.ImageData{}, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		errStr := fmt.Sprintf("Failed to commit transaction. Error: %v", err)
-		return models.ImageData{}, errors.New(errStr)
-	}
-
-	if err := tx.Commit(); err != nil {
-		tx.Rollback()
-		errStr := fmt.Sprintf("Failed to commit transaction. Error: %v", err)
-		return models.ImageData{}, errors.New(errStr)
 	}
 
 	return data, nil

@@ -19,3 +19,14 @@ type PostData struct {
 	UserPostsDir   string
 	Path           string
 }
+
+type CreatePost struct {
+	Id                 uuid.UUID
+	CreatorId          uuid.UUID
+	UserPostsDirectory string
+	ContentPath        string
+	Title              string
+	Content            string
+	CreatedAt          int64
+	UpdatedAt          int64
+}

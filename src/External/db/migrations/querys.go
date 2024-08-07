@@ -7,7 +7,7 @@ const sqlMigrateUserTable = `CREATE TABLE IF NOT EXISTS users(
     first_name VARCHAR(70) NOT NULL,
     last_name VARCHAR(70) NOT NULL,
     user_name VARCHAR(70) NOT NULL,
-    profile_picture_id UUID ,
+    profile_picture_path VARCHAR(250),
     media_repository_path VARCHAR(250),
     posts_directory VARCHAR(250),
     biography VARCHAR(140) NOT NULL,

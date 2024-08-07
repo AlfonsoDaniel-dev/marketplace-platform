@@ -45,13 +45,8 @@ func (p *psqlUser) PsqlCreateUserWithOutAddress(user user_model.User) error {
 }
 
 func (p *psqlUser) PsqlGetUserIdByEmail(email string) (uuid.UUID, error) {
-	tx, err := p.DB.Begin()
+	res, err := db.RunQuery(p.DB, sqlGetUserIdByEmail, email)
 	if err != nil {
-		return uuid.Nil, err
-	}
-	res, err := db.RunQuery(tx, sqlGetUserIdByEmail, email)
-	if err != nil {
-		tx.Rollback()
 		return uuid.Nil, err
 	}
 
@@ -79,47 +74,29 @@ func (p *psqlUser) PsqlInsertAddressData(address user_model.Address) error {
 }
 
 func (p *psqlUser) PsqlGetUserNameByEmail(email string) (string, error) {
-	tx, err := p.DB.Begin()
+	res, err := db.RunQuery(p.DB, sqlGetUserNameByEmail, email)
 	if err != nil {
-		return "", err
-	}
-
-	res, err := db.RunQuery(tx, sqlGetUserNameByEmail, email)
-	if err != nil {
-		tx.Rollback()
 		return "", err
 	}
 
 	userName, err := db.ParseAnyToString(res[0])
 	if err != nil {
-		tx.Rollback()
 		return "", err
 	}
-
-	tx.Commit()
 
 	return userName, nil
 }
 
 func (p *psqlUser) PsqlCheckTwoStepsVerificationIsTrue(email string) (bool, error) {
-	tx, err := p.DB.Begin()
+	res, err := db.RunQuery(p.DB, sqlCheckUserTsvIsTrue, email)
 	if err != nil {
-		return false, err
-	}
-
-	res, err := db.RunQuery(tx, sqlCheckUserTsvIsTrue, email)
-	if err != nil {
-		tx.Rollback()
 		return false, err
 	}
 
 	status, err := db.ParseAnyToBool(res[0])
 	if err != nil {
-		tx.Rollback()
 		return false, err
 	}
-
-	tx.Commit()
 
 	if !status {
 		return false, nil
@@ -225,4 +202,31 @@ func (p *psqlUser) PsqlChangeUserTsvStatus(email string, value bool) error {
 	return nil
 }
 
-// func (p *psqlUser) PsqlInsertProfilePictureData(fileName, filePath, )
+func (p *psqlUser) PsqlGetUserPostsDirectory(userId uuid.UUID) (string, error) {
+	res, err := db.RunQuery(p.DB, sqlGetPostAndRepositoryDirectory, userId)
+	if err != nil {
+		return "", err
+	}
+
+	postsDir, err := db.ParseAnyToString(res[0])
+	if err != nil {
+		return "", err
+	}
+
+	return postsDir, nil
+}
+
+func (p *psqlUser) PsqlInsertUserPostsDirectory(userId uuid.UUID, directoryPath string) error {
+	tx, err := p.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = db.ExecQuery(tx, sqlInsertUserPostsRepository, directoryPath, userId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}

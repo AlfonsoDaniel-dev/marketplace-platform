@@ -24,12 +24,12 @@ func scanQuery(rows *sql.Rows) ([]any, error) {
 	return Results, nil
 }
 
-func RunQuery(tx *sql.Tx, query string, params ...any) ([]any, error) {
+func RunQuery(db *sql.DB, query string, params ...any) ([]any, error) {
 	if query == "" || len(params) == 0 {
 		return nil, errors.New("empty query or params")
 	}
 
-	stmt, err := tx.Prepare(query)
+	stmt, err := db.Prepare(query)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +100,8 @@ func ExecQuery(tx *sql.Tx, query string, params ...any) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	tx.Commit()
 
 	return rowsAffected, nil
 }

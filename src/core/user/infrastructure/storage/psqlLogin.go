@@ -6,18 +6,10 @@ import (
 )
 
 func (p *psqlUser) PsqlGetHashPassword(email string) ([]byte, error) {
-	tx, err := p.DB.Begin()
+	res, err := db.RunQuery(p.DB, sqlGetHashedPasswordFromEmail, email)
 	if err != nil {
 		return nil, err
 	}
-
-	res, err := db.RunQuery(tx, sqlGetHashedPasswordFromEmail, email)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	tx.Commit()
 
 	hashPassword, err := db.ParseAnyToString(res[0])
 	if err != nil {
@@ -28,25 +20,17 @@ func (p *psqlUser) PsqlGetHashPassword(email string) ([]byte, error) {
 }
 
 func (p *psqlUser) PsqlVerifyEmailExists(email string) (string, error) {
-	tx, err := p.DB.Begin()
+	res, err := db.RunQuery(p.DB, sqlLoginVerifyEmailExists, email)
 	if err != nil {
-		return "", err
-	}
-
-	res, err := db.RunQuery(tx, sqlLoginVerifyEmailExists, email)
-	if err != nil {
-		tx.Rollback()
 		return "", err
 	}
 
 	fmt.Println(res[0])
 	existingEmail, err := db.ParseAnyToString(res[0])
 	if err != nil {
-		tx.Rollback()
 		return "", err
 	}
 
-	tx.Commit()
 	return existingEmail, nil
 }
 

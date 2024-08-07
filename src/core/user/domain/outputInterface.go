@@ -36,6 +36,13 @@ type OutputInterface interface {
 	PsqlChangeUserEmail(newEmail, userId string) error
 	PsqlChangeUserPassword(newPassword, email, oldPassword string) error
 	PsqlChangeUserTsvStatus(email string, value bool) error
+
+	// posts
+	PsqlCreatePost(post models.CreatePost) error
+	PsqlUpdatePostTitle(userId uuid.UUID, postTitle string) error
+	PsqlUpdatePostContent(userId uuid.UUID, postContent string) error
+	PsqlGetUserPostsDirectory(userId uuid.UUID) (string, error)
+	PsqlInsertUserPostsDirectory(userId uuid.UUID, directoryPath string) error
 }
 
 type EmailInterface interface {
@@ -56,4 +63,7 @@ type UploadsInterface interface {
 	GetImagesOnCollection(UserRepository, collectionName string, forms []models.GetImageForm) ([]models.GetImage, error)
 	UpdateImageOnCollection(collectionPath, fileName, fileExtension string, form models.UploadImageForm) (models.ImageData, error)
 	NewPost(userId uuid.UUID, postsDir, userRepository, postName string) (models.PostData, error)
+	UpdateImageOnPost(postDir, fileName, fileDescription string, NewImage models.UploadImageForm) (models.ImageData, error)
+	DeleteImageOnPost(postDir, fileName, fileDescription string) error
+	UpdatePostName(postsDir, postName, NewpPostName string, userId uuid.UUID) (models.PostData, error)
 }

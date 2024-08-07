@@ -13,3 +13,7 @@ const sqlInsertAccesToken = `UPDATE users SET tmpTSVCodeVerification = $1 WHERE 
 const sqlGetAccessToken = `SELECT tmpTSVCodeVerification FROM users WHERE email = $1`
 
 const sqlCleanAccessToken = `UPDATE users SET tmpTSVCodeVerification = '' WHERE email = $1`
+
+const sqlGetPostAndRepositoryDirectory = `SELECT posts_directory, users.media_repository_path FROM users WHERE id = $1`
+
+const sqlInsertUserPostsRepository = `UPDATE users SET posts_directory =$1 WHERE id =$2`

@@ -46,6 +46,28 @@ func (US *UploadService) CheckIfUserHasPostsDir(userRepository string) (bool, er
 	return true, nil
 }
 
+func (US *UploadService) CheckIfPostExists(PostDir string) bool {
+	if PostDir == "" {
+		return false
+	}
+
+	okChan := make(chan bool)
+
+	go func(condition chan<- bool) {
+		_, err := os.Stat(PostDir)
+		if !os.IsExist(err) {
+			condition <- false
+		}
+
+		condition <- true
+
+	}(okChan)
+
+	ok := <-okChan
+
+	return ok
+}
+
 func (US *UploadService) NewPost(postsDir, postName string) (string, error) {
 	if postsDir == "" || postName == "" {
 		return "", errors.New("userRepository, postsDir, postName is required")
