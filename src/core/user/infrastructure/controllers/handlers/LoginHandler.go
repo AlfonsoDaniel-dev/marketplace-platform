@@ -1,12 +1,13 @@
 package userHandlers
 
 import (
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"shopperia/src/auth"
+	"os"
 	"shopperia/src/common/models"
 	"shopperia/src/common/responses"
+	"strconv"
+	"time"
 )
 
 var loginStatus string
@@ -20,88 +21,57 @@ func (H *Handler) UserLogin(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
-	ok, err := H.Service.CheckLoginData(form)
-	if err != nil {
-		response := responses.NewResponse("error", "error checking login", nil)
-		return c.JSON(http.StatusInternalServerError, response)
-	} else if !ok {
-		response := responses.NewResponse("error", "login failed data not correct", nil)
+	loginProgress := H.Service.LoginUser(form)
+	if loginProgress.Error != nil {
+		response := responses.NewResponse("error", "error while login", nil)
 		return c.JSON(http.StatusBadRequest, response)
-	}
+	} else if !loginProgress.HasTwoStepsVerification {
+		response := responses.NewResponse("ok", "login success", loginProgress.Token)
 
-	HasTSV, err := H.Service.CheckTwoStepsVerification(form.Email)
-	if err != nil {
-		fmt.Println(err)
-		response := responses.NewResponse("error", "error while checking TSV", nil)
-		return c.JSON(http.StatusInternalServerError, response)
-	}
-
-	if !HasTSV {
-		token, err := H.Service.LoginUser(form)
-		if err != nil {
-			response := responses.NewResponse("error", "error while login", err)
-			return c.JSON(http.StatusBadRequest, response)
-		}
-		response := responses.GenerateResponses("ok", "login Success", []any{token})
 		return c.JSON(http.StatusOK, response)
 	}
 
-	_, err = H.Service.SendLoginConfirmation(form.Email)
-	if err != nil {
-		response := responses.NewResponse("error", "error while sending login confirmation", err)
-		return c.JSON(http.StatusInternalServerError, response)
-	}
-	okchan := make(chan string)
-
 	e := c.Echo()
 
-	go e.GET("/api/user/login/confirm/:email/:token", func(c echo.Context) error {
-		email := c.Param("email")
-		accessToken := c.Param("token")
-
-		ok, err := H.Service.CheckToken(email, accessToken)
-		if err != nil {
-			fmt.Println(err)
-			okchan <- ""
-			response := responses.NewResponse("error", "error while checking token", err)
-			return c.JSON(http.StatusInternalServerError, response)
-		}
-
-		if !ok {
-			okchan <- ""
-			response := responses.NewResponse("error", "error while checking token", nil)
-			return c.JSON(http.StatusUnauthorized, response)
-		}
-
-		model := models.Login{
-			Email:    email,
-			Password: "",
-		}
-
-		JwtToken, err := auth.GenerateToken(model, "", false)
-		if err != nil {
-			okchan <- ""
-			response := responses.NewResponse("error", "error while login", err)
-			return c.JSON(http.StatusInternalServerError, response)
-		}
-
-		okchan <- JwtToken
-
-		err = H.Service.CleanToken(email)
-		if err != nil {
-			response := responses.NewResponse("error", "error while login", err)
-			return c.JSON(http.StatusInternalServerError, response)
-		}
-
-		return c.String(http.StatusOK, "Login Success")
-	})
-
-	token := <-okchan
-	if token == "" {
-		response := responses.NewResponse("error", "error while login", nil)
-		return c.JSON(http.StatusUnauthorized, response)
+	limit, err := strconv.Atoi(os.Getenv("MAX_LOGIN_CONFIRMATION_TIME"))
+	if err != nil {
+		limit = 30
 	}
 
-	response := responses.GenerateResponses("ok", "login Success", []any{token})
+	confirmationChan := make(chan bool)
+
+	go e.GET("api/user/login/confirm/:email/:token", func(c echo.Context) error {
+		token := c.Param("token")
+
+		token, err := H.Service.HandleTSVConfirmation(form, token)
+		if err != nil {
+			loginProgress.Error = err
+			response := responses.NewResponse("error", "failed to login", nil)
+			return c.JSON(http.StatusInternalServerError, response)
+		}
+
+		confirmationChan <- true
+		loginProgress.Token = token
+
+		response := responses.NewResponse("ok", "Login success", nil)
+		return c.JSON(http.StatusOK, response)
+	})
+
+	maxTime := time.Duration(limit) * time.Minute
+
+	select {
+	case <-confirmationChan:
+		if loginProgress.Error != nil {
+			response := responses.NewResponse("error", "login failed", err)
+			return c.JSON(http.StatusInternalServerError, response)
+		}
+		response := responses.NewResponse("ok", "login success", loginProgress.Token)
+		return c.JSON(http.StatusOK, response)
+	case <-time.After(maxTime):
+		response := responses.NewResponse("error", "login timeout no confirmation", nil)
+		return c.JSON(http.StatusRequestTimeout, response)
+	}
+
+	response := responses.GenerateResponses("ok", "login Success", []any{loginProgress.Token})
 	return c.JSON(http.StatusOK, response)
 }

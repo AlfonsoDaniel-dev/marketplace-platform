@@ -26,7 +26,8 @@ func (H *Handler) Register(c echo.Context) error {
 	err = H.Service.Register(RegisterForm)
 	if err != nil {
 		fmt.Println(err)
-		response := responses.NewResponse("error", "error while register", err)
+		fmt.Println(RegisterForm)
+		response := responses.NewResponse("error", "error while register", err.Error())
 		return c.JSON(http.StatusInternalServerError, response)
 	}
 
@@ -35,14 +36,14 @@ func (H *Handler) Register(c echo.Context) error {
 		Password: RegisterForm.Password,
 	}
 
-	token, err := H.Service.LoginUser(loginModel)
-	if err != nil {
+	loginProgress := H.Service.LoginUser(loginModel)
+	if loginProgress.Error != nil {
 		fmt.Println(err)
 		response := responses.NewResponse("error", "register was success but it was an error while generating Token for auto login", err)
 		return c.JSON(http.StatusInternalServerError, response)
 	}
 
-	data := []any{token, RegisterForm}
+	data := []any{loginProgress.Token, RegisterForm}
 
 	response := responses.GenerateResponses("ok", "Register and Login success", data)
 	return c.JSON(http.StatusOK, response)

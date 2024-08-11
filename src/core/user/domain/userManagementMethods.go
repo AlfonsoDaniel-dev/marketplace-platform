@@ -55,7 +55,7 @@ func (u *UserDomain) CheckLogin(email, password string) (bool, error) {
 
 	ok := helpers.ComparePasswords(hashedPassword, password)
 	if !ok {
-		return false, errors.New("error")
+		return false, errors.New("password is wrong")
 	}
 
 	return true, nil

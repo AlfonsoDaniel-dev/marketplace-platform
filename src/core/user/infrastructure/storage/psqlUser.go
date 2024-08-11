@@ -31,11 +31,9 @@ func (p *psqlUser) PsqlCreateUserWithOutAddress(user user_model.User) error {
 	nullBiography := helpers.StringToNull(user.Biography)
 
 	if _, err := db.ExecQuery(tx, sqlCreateUser, user.Id, user.FirstName, user.LastName, user.UserName, nullBiography, user.Age, user.Email, user.Password, user.TwoStepsVerfication, user.CreatedAt, nullTime); err != nil {
-		tx.Rollback()
 		return err
 	}
 
-	err = tx.Commit()
 	if err != nil {
 		return err
 	}

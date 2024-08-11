@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"golang.org/x/crypto/bcrypt"
-	"log"
 )
 
 func EncryptPassword(password string) (string, error) {
@@ -17,7 +16,6 @@ func EncryptPassword(password string) (string, error) {
 func ComparePasswords(OldPassword []byte, password string) bool {
 	ok := bcrypt.CompareHashAndPassword(OldPassword, []byte(password))
 	if ok != nil {
-		log.Println("error while comparing password. ERR: ", ok)
 		return false
 	}
 

@@ -12,7 +12,8 @@ import (
 
 func (S *Service) Register(register UserDTO.RegisterDTO) error {
 	if register.FirstName == "" || register.LastName == "" || register.Email == "" {
-		return errors.New("please provide valid fields")
+		errStr := fmt.Sprintf("Email from form: %s, FirstName from form: %s, LastName from form: %s", register.Email, register.FirstName, register.LastName)
+		return errors.New(errStr)
 	}
 
 	register.UserName = strings.ReplaceAll(register.UserName, " ", "_")
@@ -22,27 +23,29 @@ func (S *Service) Register(register UserDTO.RegisterDTO) error {
 	UserId := uuid.New()
 
 	user := userModel.User{
-		Id:              UserId,
-		FirstName:       register.FirstName,
-		LastName:        register.LastName,
-		UserName:        register.UserName,
-		Biography:       register.Biography,
-		ProfilePicture:  userModel.Image{},
-		Age:             register.Age,
-		Email:           register.Email,
-		Password:        register.Password,
-		UserAddress:     userModel.Address{},
-		OrderedProducts: nil,
-		Orders:          nil,
-		CreatedAt:       AccountCreatedAt,
-		UpdatedAt:       0,
+		Id:                  UserId,
+		FirstName:           register.FirstName,
+		LastName:            register.LastName,
+		TwoStepsVerfication: register.TwoStepsVerification,
+		UserName:            register.UserName,
+		Biography:           register.Biography,
+		ProfilePicture:      userModel.Image{},
+		Age:                 register.Age,
+		Email:               register.Email,
+		Password:            register.Password,
+		UserAddress:         userModel.Address{},
+		OrderedProducts:     nil,
+		Orders:              nil,
+		CreatedAt:           AccountCreatedAt,
+		UpdatedAt:           0,
 	}
 
 	fmt.Println(user.Biography)
 
 	err := S.UseCase.CreateUserWithOutAddress(user)
 	if err != nil {
-		errString := fmt.Sprintf("rror while registering user: %v", err)
+		fmt.Println(err)
+		errString := fmt.Sprintf("error while registering user: %v", err)
 		return errors.New(errString)
 	}
 

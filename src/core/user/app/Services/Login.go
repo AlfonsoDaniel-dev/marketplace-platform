@@ -39,25 +39,82 @@ func (S *Service) CheckLoginData(form models.Login) (bool, error) {
 	return true, nil
 }
 
-func (S *Service) LoginUser(form models.Login) (string, error) {
+func (S *Service) LoginUser(form models.Login) models.LoginStatus {
 	if form.Email == condition || form.Password == condition {
 		errStr := fmt.Sprintf("please provide all login fields")
-		return "", errors.New(errStr)
+		return models.LoginStatus{Error: errors.New(errStr)}
 	}
 
-	userName, err := S.UseCase.GetUserNameByEmail(form.Email)
+	loginProcces := models.LoginStatus{}
+
+	ok, err := S.UseCase.CheckLogin(form.Email, form.Password)
 	if err != nil {
-		errStr := fmt.Sprintf("Error while getting userName. ERR: %v", err)
-		return "", errors.New(errStr)
+		errStr := fmt.Sprintf("it was an error checking login information, may be email or password are bad, ERR %v", err)
+		return models.LoginStatus{Error: errors.New(errStr)}
+	} else if !ok {
+		errStr := fmt.Sprintf("please provide all login fields")
+		return models.LoginStatus{Error: errors.New(errStr)}
 	}
 
-	token, err := auth.GenerateToken(form, userName, false)
+	hasTSV, err := S.UseCase.CheckTwoStepsVerification(form.Email)
 	if err != nil {
-		errStr := fmt.Sprintf("Error while generating token. ERR: %v", err)
-		return "", errors.New(errStr)
+		return models.LoginStatus{Error: err}
+	} else if !hasTSV {
+
+		loginProcces.HasTwoStepsVerification = false
+		userName, err := S.UseCase.GetUserNameByEmail(form.Email)
+		if err != nil {
+			errStr := fmt.Sprintf("Error while getting userName. ERR: %v", err)
+			return models.LoginStatus{Error: errors.New(errStr)}
+		}
+
+		token, err := auth.GenerateToken(form, userName, false)
+		if err != nil {
+			errStr := fmt.Sprintf("Error while generating token. ERR: %v", err)
+			return models.LoginStatus{Error: errors.New(errStr)}
+		}
+
+		loginProcces.Token = token
+
+		return loginProcces
 	}
 
-	return token, nil
+	confimationLink, err := S.UseCase.SendLoginConfirmationEmail(form.Email)
+	if err != nil {
+		errStr := fmt.Sprintf("Error while sending login confirmation email. ERR: %v", err)
+		return models.LoginStatus{Error: errors.New(errStr)}
+	}
+
+	loginProcces.HasTwoStepsVerification = true
+	loginProcces.TsvConfirmationLink = confimationLink
+	return loginProcces
+
+	return loginProcces
+}
+
+func (S *Service) HandleTSVConfirmation(login models.Login, Accestoken string) (string, error) {
+	tokenValid, err := S.UseCase.CheckAccessToken(login.Email, Accestoken)
+	if err != nil {
+		return "", err
+	}
+
+	if !tokenValid {
+		return "", errors.New("token is invalid")
+	}
+
+	userName, err := S.UseCase.GetUserNameByEmail(login.Email)
+
+	tokenjwt, err := auth.GenerateToken(login, userName, false)
+	if err != nil {
+		return "", err
+	}
+
+	err = S.UseCase.CleanAccessToken(login.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenjwt, nil
 }
 
 func (S *Service) CheckTwoStepsVerification(email string) (bool, error) {

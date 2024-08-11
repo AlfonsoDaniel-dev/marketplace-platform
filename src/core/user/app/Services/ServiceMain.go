@@ -19,7 +19,8 @@ func NewService(useCase userApp.UseCase) *Service {
 type ServiceInterface interface {
 	Hello() string
 	Register(register UserDTO.RegisterDTO) error
-	LoginUser(form models.Login) (string, error)
+	LoginUser(form models.Login) models.LoginStatus
+	HandleTSVConfirmation(login models.Login, AccesTokem string) (string, error)
 	CheckLoginData(form models.Login) (bool, error)
 	CheckTwoStepsVerification(email string) (bool, error)
 	SendLoginConfirmation(email string) (string, error)
